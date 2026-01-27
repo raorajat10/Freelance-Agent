@@ -1,0 +1,50 @@
+[
+  {
+    "business_name": "Joe's Plumbing",
+    "website_status": "No Website",
+    "website_issues": [
+      "No website found"
+    ],
+    "lead_score": 12,
+    "priority": "HIGH",
+    "outreach_message": "I noticed Joe's Plumbing in Austin doesn't have a website. Professional websites for Plumbing businesses start at $199. Would you be interested in discussing how a website could help your business?"
+  },
+  {
+    "business_name": "Tech Solutions Inc",
+    "website_status": "Weak Website",
+    "website_issues": [
+      "Website unreachable: Connection Failed"
+    ],
+    "lead_score": 7,
+    "priority": "MEDIUM",
+    "outreach_message": "I noticed Tech Solutions Inc's website in Austin could be improved. Professional website upgrades for IT Services businesses start at $199. Would you like to discuss how we can help?"
+  },
+  {
+    "business_name": "Maria's Landscaping",
+    "website_status": "Weak Website",
+    "website_issues": [
+      "Website unreachable: Connection Failed"
+    ],
+    "lead_score": 12,
+    "priority": "HIGH",
+    "outreach_message": "I noticed Maria's Landscaping's website in Dallas could be improved. Professional website upgrades for Landscaping businesses start at $199. Would you like to discuss how we can help?"
+  },
+  {
+    "business_name": "Elite HVAC",
+    "website_status": "Acceptable Website",
+    "website_issues": [],
+    "lead_score": 3,
+    "priority": "LOW",
+    "outreach_message": "Low priority - no outreach generated"
+  },
+  {
+    "business_name": "Bob's Electrical",
+    "website_status": "No Website",
+    "website_issues": [
+      "No website found"
+    ],
+    "lead_score": 15,
+    "priority": "HIGH",
+    "outreach_message": "I noticed Bob's Electrical in San Antonio doesn't have a website. Professional websites for Electrician businesses start at $199. Would you be interested in discussing how a website could help your business?"
+  }
+]

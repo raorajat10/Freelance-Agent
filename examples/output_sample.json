@@ -1,0 +1,18 @@
+[
+  {
+    "business_name": "Joe's Plumbing",
+    "website_status": "No Website",
+    "website_issues": ["No website found"],
+    "lead_score": 15,
+    "priority": "HIGH",
+    "outreach_message": "I noticed Joe's Plumbing in Austin doesn't have a website yet. Many customers search online for plumbing services in Austin, and a professional website starting at $199 could help them find you. Would you be interested in discussing how a website could grow your business?"
+  },
+  {
+    "business_name": "Maria's Landscaping",
+    "website_status": "Weak Website",
+    "website_issues": ["Missing HTTPS", "Not mobile-friendly"],
+    "lead_score": 12,
+    "priority": "HIGH",
+    "outreach_message": "I checked out Maria's Landscaping's website in Dallas and noticed it's missing HTTPS security and isn't mobile-friendly. These issues can hurt your visibility in Google searches and lose potential customers. We can modernize your website starting at $199 - would you like to learn more?"
+  }
+]

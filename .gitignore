@@ -1,0 +1,11 @@
+# Environment variables
+.env
+.env.*
+
+# Secrets
+secrets/
+*.key
+
+# Python
+__pycache__/
+*.pyc
