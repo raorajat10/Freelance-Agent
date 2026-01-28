@@ -759,8 +759,7 @@ def main_app():
         # Support info
         st.markdown("""
         **Need Help?**
-        📧 support@leadqualifier.com
-        💬 Chat: +91-XXXXXXXXXX
+        📧 supportLeadqualifier@gmail.com
         """)
     
     # Main content area
