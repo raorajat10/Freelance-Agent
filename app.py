@@ -518,21 +518,21 @@ def login_page():
     with col1:
         st.markdown("""
         <div class="feature-box">
-            <h3>⚡ Lightning Fast</h3>
+            <h3 style="color: black;">⚡ Lightning Fast</h3>
             <p>Process 100 leads in under 60 seconds</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
         <div class="feature-box">
-            <h3>🤖 AI-Powered</h3>
+            <h3 style="color: black;">🤖 AI-Powered</h3>
             <p>GPT-4 generates personalized outreach</p>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
         <div class="feature-box">
-            <h3>💰 Pay Per Use</h3>
+            <h3 style="color: black;">💰 Pay Per Use</h3>
             <p>No subscription, buy credits as needed</p>
         </div>
         """, unsafe_allow_html=True)
