@@ -911,7 +911,7 @@ def main_app():
         # Support info
         st.markdown("""
         **Need Help?**
-         leadqualifierhelp28@gmail.com
+        📧 leadqualifierhelp28@gmail.com
         """)
     
     # Main content area
