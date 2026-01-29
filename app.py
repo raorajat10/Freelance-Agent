@@ -1323,13 +1323,32 @@ def main_app():
 
 
 def main():
-    """Main entry point"""
+    # ✅ ALWAYS initialize session state FIRST
     init_session_state()
-    
+
+    # 🔐 Auto-login from cookie (AFTER init)
+    if not st.session_state.logged_in:
+        saved_email = cookies.get("user_email")
+        expiry = cookies.get("expiry")
+
+        if saved_email and expiry and time.time() < float(expiry):
+            users = load_users()
+            if saved_email in users:
+                st.session_state.logged_in = True
+                st.session_state.user_email = saved_email
+                st.session_state.credits = users[saved_email]['credits']
+
+                saved_results = load_results(saved_email)
+                st.session_state.results = [
+                    LeadOutput(**r) for r in saved_results
+                ]
+
+    # ✅ NOW it is safe to read logged_in
     if st.session_state.logged_in:
         main_app()
     else:
         login_page()
+
 
 
 if __name__ == "__main__":
