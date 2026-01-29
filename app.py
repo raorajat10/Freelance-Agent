@@ -14,6 +14,14 @@ from src.agents.outreach_generator import OutreachGenerator
 from src.models.schemas import LeadInput, LeadOutput
 from streamlit_cookies_manager import EncryptedCookieManager
 
+st.set_page_config(
+    page_title="Lead Qualifier Pro - AI Lead Qualification",
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ✅ Safe AFTER page config
 cookies = EncryptedCookieManager(
     prefix="leadqualifier_",
     password="super-secret-password-change-this"
@@ -48,13 +56,6 @@ def load_results(user_email: str):
     return []
 
 
-# Page config
-st.set_page_config(
-    page_title="Lead Qualifier Pro - AI Lead Qualification",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # API Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
