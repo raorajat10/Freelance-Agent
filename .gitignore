@@ -9,3 +9,7 @@ secrets/
 # Python
 __pycache__/
 *.pyc
+# runtime data
+data/results/
+users.json
+

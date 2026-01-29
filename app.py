@@ -12,6 +12,41 @@ from src.agents.website_classifier import WebsiteClassifier
 from src.agents.lead_scorer import LeadScorer
 from src.agents.outreach_generator import OutreachGenerator
 from src.models.schemas import LeadInput, LeadOutput
+from streamlit_cookies_manager import EncryptedCookieManager
+
+cookies = EncryptedCookieManager(
+    prefix="leadqualifier_",
+    password="super-secret-password-change-this"
+)
+
+if not cookies.ready():
+    st.stop()
+
+
+
+RESULTS_DIR = "data/results"
+os.makedirs(RESULTS_DIR, exist_ok=True)
+
+
+def get_results_file(user_email: str) -> str:
+    safe_email = user_email.replace("@", "_at_").replace(".", "_")
+    return os.path.join(RESULTS_DIR, f"{safe_email}.json")
+
+
+def save_results(user_email: str, results: list):
+    path = get_results_file(user_email)
+    print("SAVING RESULTS TO:", path)
+    with open(path, "w") as f:
+        json.dump([r.model_dump() for r in results], f, indent=2)
+
+
+def load_results(user_email: str):
+    path = get_results_file(user_email)
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return json.load(f)
+    return []
+
 
 # Page config
 st.set_page_config(
@@ -30,6 +65,134 @@ STRIPE_KEY = os.getenv("STRIPE_KEY", "")  # For International: Stripe
 
 USER_DB_FILE = "users.json"
 
+def process_single_lead(url, company_name):
+    """Process a single lead through the qualification pipeline"""
+    try:
+        # Initialize agents
+        inspector = WebsiteInspector()
+        classifier = WebsiteClassifier()
+        scorer = LeadScorer()
+        outreach = OutreachGenerator()
+
+        # Create lead input
+        lead_input = LeadInput(website_url=url, company_name=company_name)
+
+        # Process through pipeline
+        with st.spinner("🔍 Inspecting website..."):
+            inspection = inspector.inspect(lead_input)
+
+        with st.spinner("🏷️ Classifying website..."):
+            classification = classifier.classify(inspection)
+
+        with st.spinner("📊 Scoring lead..."):
+            scored_lead = scorer.score(classification)
+
+        with st.spinner("✉️ Generating outreach..."):
+            result = outreach.generate(scored_lead)
+
+        return result
+
+    except Exception as e:
+        st.error(f"Error processing lead: {str(e)}")
+        return None
+
+
+def calculate_priority_metrics(results):
+    """Calculate priority-based metrics"""
+    if not results:
+        return 0, 0, 0, 0.0
+
+    high_count = sum(1 for r in results if r.priority == "HIGH")
+    medium_count = sum(1 for r in results if r.priority == "MEDIUM")
+    low_count = sum(1 for r in results if r.priority == "LOW")
+    avg_score = sum(r.lead_score for r in results) / len(results)
+
+    return high_count, medium_count, low_count, avg_score
+
+
+def highlight_priority(row):
+    """Apply color highlighting based on priority"""
+    color_map = {
+        "HIGH": f"background-color: rgba(52, 199, 89, 0.1)",
+        "MEDIUM": f"background-color: rgba(255, 149, 0, 0.1)",
+        "LOW": f"background-color: rgba(142, 142, 147, 0.1)",
+    }
+    return [color_map.get(row["priority"], "")] * len(row)
+
+def display_lead_results(results):
+    """Display lead qualification results"""
+    if not results:
+        st.info("No results to display")
+        return
+
+    # Metrics
+    col1, col2, col3, col4 = st.columns(4)
+
+    high_count, medium_count, low_count, avg_score = (
+        calculate_priority_metrics(results)
+    )
+
+    col1.metric("Total Leads", len(results))
+    col2.metric(
+        "High Priority",
+        high_count,
+        delta=f"{high_count/len(results)*100:.0f}%",
+    )
+    col3.metric("Medium Priority", medium_count)
+    col4.metric("Avg Score", f"{avg_score:.1f}")
+
+    # Results table
+    st.markdown("### Detailed Results")
+
+    df = pd.DataFrame([r.model_dump() for r in results])
+    df["website_issues"] = df["website_issues"].apply(
+        lambda x: "; ".join(x) if x else ""
+    )
+
+    st.dataframe(
+        df.style.apply(highlight_priority, axis=1),
+        use_container_width=True,
+        height=400,
+    )
+
+    # Export options
+    st.markdown("### 💾 Export Results")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        json_data = json.dumps([r.model_dump() for r in results], indent=2)
+        st.download_button(
+            "📄 Download JSON",
+            json_data,
+            "leads_results.json",
+            "application/json",
+        )
+
+    with col2:
+        csv_data = df.to_csv(index=False)
+        st.download_button(
+            "📊 Download CSV",
+            csv_data,
+            "leads_results.csv",
+            "text/csv",
+        )
+
+    with col3:
+        try:
+            buffer = BytesIO()
+            df.to_excel(buffer, index=False, engine="openpyxl")
+            st.download_button(
+                "📈 Download Excel",
+                buffer.getvalue(),
+                "leads_results.xlsx",
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet",
+            )
+        except ImportError:
+            st.info("Install openpyxl for Excel export")
+
+
 def load_users():
     if os.path.exists(USER_DB_FILE):
         with open(USER_DB_FILE, 'r') as f:
@@ -45,7 +208,19 @@ def hash_password(password):
 
 def init_session_state():
     if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
+        saved_email = cookies.get("user_email")
+        expiry = cookies.get("expiry")
+
+        if saved_email and expiry and time.time() < float(expiry):
+           users = load_users()
+           if saved_email in users:
+              st.session_state.logged_in = True
+              st.session_state.user_email = saved_email
+              st.session_state.credits = users[saved_email]['credits']
+
+            # load saved results
+              saved_results = load_results(saved_email)
+              st.session_state.results = [LeadOutput(**r) for r in saved_results]
     if 'user_email' not in st.session_state:
         st.session_state.user_email = None
     if 'credits' not in st.session_state:
@@ -54,6 +229,11 @@ def init_session_state():
         st.session_state.show_payment = False
     if 'processing' not in st.session_state:
         st.session_state.processing = False
+    if 'results' not in st.session_state:
+        st.session_state.results = []
+    if 'analyzed_count' not in st.session_state:
+        st.session_state.analyzed_count = 0  
+          
 
 # Advanced CSS with animations
 st.markdown("""
@@ -574,12 +754,19 @@ def login_page():
                     st.session_state.logged_in = True
                     st.session_state.user_email = email
                     st.session_state.credits = users[email]['credits']
+        # 🔐 save cookie for 24 hours
+                    cookies["user_email"] = email
+                    cookies["expiry"] = str(time.time() + 86400)  # 24 hours
+                    cookies.save()
+
+        # load saved results
+                    saved_results = load_results(email)
+                    st.session_state.results = [LeadOutput(**r) for r in saved_results]
+
                     st.success("✅ Welcome back!")
                     time.sleep(1)
                     st.rerun()
-                else:
-                    st.error("❌ Invalid credentials")
-    
+
     with tab2:
         st.markdown("""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -673,9 +860,9 @@ def main_app():
         st.markdown('<p class="main-header" style="text-align: left; font-size: 2.5rem;">🎯 Lead Qualifier Pro</p>', unsafe_allow_html=True)
     with col2:
         st.markdown(f'<div class="credit-badge">💳 {user_data["credits"]} Credits</div>', unsafe_allow_html=True)
-    with col3:
-        if st.button("➕ Buy Credits", use_container_width=True):
-            st.session_state.show_payment = True
+    # with col3:
+    #     if st.button("➕ Buy Credits", use_container_width=True):
+    #         st.session_state.show_payment = True
     
     # Payment Modal
     # if st.session_state.show_payment:
@@ -706,8 +893,9 @@ def main_app():
         st.metric("Credits", user_data['credits'])
         st.metric("Total Processed", user_data['total_processed'])
         
-        st.markdown("---")
         
+        st.markdown("---")
+            
         # Transaction history
         if 'transactions' in user_data and user_data['transactions']:
             with st.expander("💰 Purchase History"):
@@ -716,11 +904,18 @@ def main_app():
         
         st.markdown("---")
         
+
         if st.button("🚪 Logout", use_container_width=True):
-            st.session_state.logged_in = False
-            st.session_state.user_email = None
-            st.session_state.credits = 0
-            st.rerun()
+               cookies.pop("user_email")
+               cookies.pop("expiry")
+               cookies.save()
+
+               st.session_state.logged_in = False
+               st.session_state.user_email = None
+               st.session_state.credits = 0
+               st.session_state.results = []
+               st.rerun()
+
         
         st.markdown("---")
         
@@ -759,7 +954,7 @@ def main_app():
         # Support info
         st.markdown("""
         **Need Help?**
-        📧 supportLeadqualifier@gmail.com
+         leadqualifierhelp28@gmail.com
         """)
     
     # Main content area
@@ -767,8 +962,87 @@ def main_app():
         st.error("⚠️ Service temporarily unavailable. Contact support.")
         return
     
+     # Input section
+    st.markdown("## Single Lead Information")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        url = st.text_input(
+            "Website URL",
+            placeholder="https://example.com",
+            help="Enter the complete website URL",
+        )
+
+    with col2:
+        company_name = st.text_input(
+            "Company Name",
+            placeholder="Acme Inc.",
+            help="Enter the company name",
+        )
+
+    # Analyze button
+    if st.button("🚀 Analyze Lead", type="primary", use_container_width=True):
+
+    # 🔒 Credit check (reuse existing logic)
+     if user_data['credits'] <= 0:
+        st.warning("🔒 You’ve used all your free leads.")
+        st.info("💳 Buy credits to continue.")
+        st.stop()
+
+     if not url or not company_name:
+        st.error("Please provide both website URL and company name")
+     else:
+        try:
+            # ✅ INITIALIZE PIPELINE (THIS WAS MISSING)
+            pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
+
+            # ✅ Create full LeadInput (required by schema)
+            lead = LeadInput(
+                business_name=company_name,
+                website_url=url,
+                category="Unknown",
+                city="Unknown",
+                state="Unknown",
+                email=""
+            )
+
+            # ✅ Process lead
+            result = pipeline.process_lead(lead)
+
+            pipeline.cleanup()
+
+            if result:
+                st.session_state.results.append(result)
+                save_results(user_email, st.session_state.results)
+
+                # Deduct credit (same as CSV)
+                users[user_email]['credits'] -= 1
+                users[user_email]['total_processed'] += 1
+                save_users(users)
+                st.session_state.credits = users[user_email]['credits']
+
+                st.success(
+                    f"✅ Lead analyzed successfully! "
+                    f"Priority: {result.priority}"
+                )
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Error processing lead: {e}")
+    st.markdown("---")
+
+# 🔁 Re-display previous single-lead results (after rerun)
+    if st.session_state.results:
+        st.markdown("## 📊 Analyzed Leads")
+        display_lead_results(st.session_state.results)
+
+
+    st.markdown("---")
+    
+    
     # Upload section
-    st.header("1️⃣ Upload Your Leads")
+    st.header("Full Batch Upload")
     uploaded_file = st.file_uploader(
         "Drop your CSV file here or click to browse",
         type=['csv'],
@@ -807,17 +1081,17 @@ def main_app():
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    if st.button("💳 Buy 50 Credits (₹500)", use_container_width=True):
+                    if st.button("💳 Buy 25 Credits ($25)", use_container_width=True):
                         st.session_state.show_payment = True
                         st.rerun()
-                with col2:
-                    if st.button("⭐ Buy 200 Credits (₹1,499)", use_container_width=True):
-                        st.session_state.show_payment = True
-                        st.rerun()
-                with col3:
-                    if st.button("🚀 Buy 500 Credits (₹2,999)", use_container_width=True):
-                        st.session_state.show_payment = True
-                        st.rerun()
+                # with col2:
+                #     if st.button("⭐ Buy 200 Credits (₹1,499)", use_container_width=True):
+                #         st.session_state.show_payment = True
+                #         st.rerun()
+                # with col3:
+                #     if st.button("🚀 Buy 500 Credits (₹2,999)", use_container_width=True):
+                #         st.session_state.show_payment = True
+                #         st.rerun()
                 
                 return
             
@@ -909,6 +1183,10 @@ def main_app():
                     users[user_email]['total_processed'] += num_leads
                     save_users(users)
                     st.session_state.credits = users[user_email]['credits']
+                    # ✅ Persist CSV results to disk (THIS WAS MISSING)
+                    st.session_state.results.extend(results)
+                    save_results(user_email, st.session_state.results)
+
                     
                     # Display results
                     st.header("4️⃣ Results & Insights")
