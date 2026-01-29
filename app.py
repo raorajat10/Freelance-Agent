@@ -1015,7 +1015,6 @@ def main_app():
             if result:
                 st.session_state.results.append(result)
                 save_results(user_email, st.session_state.results)
-
                 # Deduct credit (same as CSV)
                 users[user_email]['credits'] -= 1
                 users[user_email]['total_processed'] += 1
@@ -1034,8 +1033,8 @@ def main_app():
 
 # 🔁 Re-display previous single-lead results (after rerun)
     if st.session_state.results:
-      st.markdown("## 📊 Analyzed Leads")
-      display_lead_results(st.session_state.results)
+        st.markdown("## 📊 Analyzed Leads")
+        display_lead_results(st.session_state.results)
 
 
     st.markdown("---")
