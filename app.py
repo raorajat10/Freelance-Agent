@@ -14,6 +14,15 @@ from src.agents.outreach_generator import OutreachGenerator
 from src.models.schemas import LeadInput, LeadOutput
 from streamlit_cookies_manager import EncryptedCookieManager
 
+cookies = EncryptedCookieManager(
+    prefix="leadqualifier_",
+    password="super-secret-password-change-this"
+)
+
+if not cookies.ready():
+    st.stop()
+
+
 
 RESULTS_DIR = "data/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -46,13 +55,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# ⚠️ CRITICAL FIX: Initialize cookies AFTER set_page_config
-cookies = EncryptedCookieManager(
-    prefix="leadqualifier_",
-    password="super-secret-password-change-this"
-)
-
 
 # API Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -204,72 +206,35 @@ def save_users(users):
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-
 def init_session_state():
-    """Initialize session state with default values - NO cookie access here!"""
-    defaults = {
-        "logged_in": False,
-        "user_email": None,
-        "credits": 0,
-        "show_payment": False,
-        "results": [],
-        "analyzed_count": 0,
-        "current_page": "home",
-        "processing": False,
-    }
-    
-    # Set defaults only if key doesn't exist
-    for key, default_value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = default_value
+    if 'logged_in' not in st.session_state:
+        saved_email = cookies.get("user_email")
+        expiry = cookies.get("expiry")
 
+        if saved_email and expiry and time.time() < float(expiry):
+           users = load_users()
+           if saved_email in users:
+              st.session_state.logged_in = True
+              st.session_state.user_email = saved_email
+              st.session_state.credits = users[saved_email]['credits']
 
-def restore_session_from_cookies(cookie_manager):
-    """
-    Restore user session from cookies - only call after cookies are ready!
-    Returns True if session was restored, False otherwise.
-    """
-    if not cookie_manager.ready():
-        return False
-    
-    try:
-        # Get cookie values
-        saved_email = cookie_manager.get("user_email")
-        expiry = cookie_manager.get("login_expiry")  # ⚠️ FIXED: Changed from "expiry" to "login_expiry"
-        
-        # Validate and restore session
-        if saved_email and expiry:
-            # Check if login hasn't expired
-            if time.time() < float(expiry):
-                users = load_users()
-                if saved_email in users:
-                    # Restore session state
-                    st.session_state.logged_in = True
-                    st.session_state.user_email = saved_email
-                    st.session_state.credits = users[saved_email]["credits"]
-                    
-                    # Load saved results
-                    try:
-                        saved_results = load_results(saved_email)
-                        st.session_state.results = [LeadOutput(**r) for r in saved_results]
-                    except Exception as e:
-                        print(f"Error loading results: {e}")
-                        st.session_state.results = []
-                    
-                    return True
-            else:
-                # Cookie expired, clear it
-                cookie_manager["user_email"] = ""
-                cookie_manager["login_expiry"] = ""
-                cookie_manager.save()
-                
-    except Exception as e:
-        st.error(f"Error restoring session: {e}")
-        return False
-    
-    return False
+            # load saved results
+              saved_results = load_results(saved_email)
+              st.session_state.results = [LeadOutput(**r) for r in saved_results]
+    if 'user_email' not in st.session_state:
+        st.session_state.user_email = None
+    if 'credits' not in st.session_state:
+        st.session_state.credits = 0
+    if 'show_payment' not in st.session_state:
+        st.session_state.show_payment = False
+    if 'processing' not in st.session_state:
+        st.session_state.processing = False
+    if 'results' not in st.session_state:
+        st.session_state.results = []
+    if 'analyzed_count' not in st.session_state:
+        st.session_state.analyzed_count = 0  
+          
 
-   
 # Advanced CSS with animations
 st.markdown("""
 <style>
@@ -695,6 +660,37 @@ def login_page():
     st.markdown('<p class="main-header">🎯 Lead Qualifier Pro</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">AI-Powered Lead Qualification for Freelancers & Agencies</p>', unsafe_allow_html=True)
     
+    # Social proof
+    # col1, col2, col3, col4 = st.columns(4)
+    # with col1:
+    #     st.markdown("""
+    #     <div class="stat-card">
+    #         <h2 style='color: #667eea; margin: 0;'>2,500+</h2>
+    #         <p style='color: #666; margin: 0;'>Leads Qualified</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    # with col2:
+    #     st.markdown("""
+    #     <div class="stat-card">
+    #         <h2 style='color: #667eea; margin: 0;'>150+</h2>
+    #         <p style='color: #666; margin: 0;'>Happy Users</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    # with col3:
+    #     st.markdown("""
+    #     <div class="stat-card">
+    #         <h2 style='color: #667eea; margin: 0;'>4.9/5</h2>
+    #         <p style='color: #666; margin: 0;'>Rating</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    # with col4:
+    #     st.markdown("""
+    #     <div class="stat-card">
+    #         <h2 style='color: #667eea; margin: 0;'>24/7</h2>
+    #         <p style='color: #666; margin: 0;'>Support</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Features
@@ -758,21 +754,18 @@ def login_page():
                     st.session_state.logged_in = True
                     st.session_state.user_email = email
                     st.session_state.credits = users[email]['credits']
-                    
-                    # Save cookie for 24 hours
+        # 🔐 save cookie for 24 hours
                     cookies["user_email"] = email
-                    cookies["login_expiry"] = str(time.time() + 86400)  # 24 hours
+                    cookies["expiry"] = str(time.time() + 86400)  # 24 hours
                     cookies.save()
 
-                    # Load saved results
+        # load saved results
                     saved_results = load_results(email)
                     st.session_state.results = [LeadOutput(**r) for r in saved_results]
 
                     st.success("✅ Welcome back!")
                     time.sleep(1)
                     st.rerun()
-                else:
-                    st.error("Invalid email or password")
 
     with tab2:
         st.markdown("""
@@ -830,6 +823,29 @@ def login_page():
             <p style='font-size: 0.9em; margin-top: 1rem;'>✓ AI Outreach Messages<br>✓ Excel/CSV Export<br>✓ Email Support</p>
         </div>
         """, unsafe_allow_html=True)
+    
+    # with col2:
+    #     st.markdown("""
+    #     <div class="pricing-card">
+    #         <div class="popular-badge">⭐ MOST POPULAR</div>
+    #         <h3>Professional</h3>
+    #         <h1>$70</h1><p style='font-size: 1.2rem;'>(30% off)</p>
+    #         <p style='font-size: 1.2rem;'>100 Credits</p>
+    #         <p>$1 per lead</p>
+    #         <p style='font-size: 0.9em; margin-top: 1rem;'>✓ Everything in Starter<br>✓ Priority Support<br>✓ Bulk Processing</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    
+    # with col3:
+    #     st.markdown("""
+    #     <div class="pricing-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+    #         <h3>Agency</h3>
+    #         <h1>$250</h1><p style='font-size: 1.2rem;'>(50% off)</p>
+    #         <p style='font-size: 1.2rem;'>500 Credits</p>
+    #         <p>$1 per lead</p>
+    #         <p style='font-size: 0.9em; margin-top: 1rem;'>✓ Everything in Pro<br>✓ API Access<br>✓ WhatsApp Support</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
 
 
 def main_app():
@@ -844,12 +860,39 @@ def main_app():
         st.markdown('<p class="main-header" style="text-align: left; font-size: 2.5rem;">🎯 Lead Qualifier Pro</p>', unsafe_allow_html=True)
     with col2:
         st.markdown(f'<div class="credit-badge">💳 {user_data["credits"]} Credits</div>', unsafe_allow_html=True)
+    # with col3:
+    #     if st.button("➕ Buy Credits", use_container_width=True):
+    #         st.session_state.show_payment = True
+    
+    # Payment Modal
+    # if st.session_state.show_payment:
+    #     st.markdown("---")
+    #     col1, col2, col3 = st.columns(3)
+        
+    #     with col1:
+    #         if st.button("📦 Starter Pack\n₹500 for 50 credits", use_container_width=True, key="buy1"):
+    #             show_payment_modal("Starter Pack", 50, 500)
+        
+    #     with col2:
+    #         if st.button("⭐ Pro Pack\n₹1,499 for 200 credits", use_container_width=True, key="buy2"):
+    #             show_payment_modal("Pro Pack", 200, 1499)
+        
+    #     with col3:
+    #         if st.button("🚀 Agency Pack\n₹2,999 for 500 credits", use_container_width=True, key="buy3"):
+    #             show_payment_modal("Agency Pack", 500, 2999)
+        
+    #     if st.button("❌ Close", key="close_payment"):
+    #         st.session_state.show_payment = False
+    #         st.rerun()
+        
+    #     st.markdown("---")
     
     # Sidebar
     with st.sidebar:
         st.markdown(f"### 👤 {user_email}")
         st.metric("Credits", user_data['credits'])
         st.metric("Total Processed", user_data['total_processed'])
+        
         
         st.markdown("---")
             
@@ -861,18 +904,18 @@ def main_app():
         
         st.markdown("---")
         
-        if st.button("🚪 Logout", use_container_width=True):
-            # Clear cookies
-            cookies["user_email"] = ""
-            cookies["login_expiry"] = ""
-            cookies.save()
 
-            # Clear session state
-            st.session_state.logged_in = False
-            st.session_state.user_email = None
-            st.session_state.credits = 0
-            st.session_state.results = []
-            st.rerun()
+        if st.button("🚪 Logout", use_container_width=True):
+               cookies.pop("user_email")
+               cookies.pop("expiry")
+               cookies.save()
+
+               st.session_state.logged_in = False
+               st.session_state.user_email = None
+               st.session_state.credits = 0
+               st.session_state.results = []
+               st.rerun()
+
         
         st.markdown("---")
         
@@ -919,7 +962,7 @@ def main_app():
         st.error("⚠️ Service temporarily unavailable. Contact support.")
         return
     
-    # Input section
+     # Input section
     st.markdown("## Single Lead Information")
 
     col1, col2 = st.columns(2)
@@ -940,60 +983,63 @@ def main_app():
 
     # Analyze button
     if st.button("🚀 Analyze Lead", type="primary", use_container_width=True):
-        # Credit check
-        if user_data['credits'] <= 0:
-            st.warning("🔒 You've used all your free leads.")
-            st.info("💳 Buy credits to continue.")
-            st.stop()
 
-        if not url or not company_name:
-            st.error("Please provide both website URL and company name")
-        else:
-            try:
-                # Initialize pipeline
-                pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
+    # 🔒 Credit check (reuse existing logic)
+     if user_data['credits'] <= 0:
+        st.warning("🔒 You’ve used all your free leads.")
+        st.info("💳 Buy credits to continue.")
+        st.stop()
 
-                # Create full LeadInput
-                lead = LeadInput(
-                    business_name=company_name,
-                    website_url=url,
-                    category="Unknown",
-                    city="Unknown",
-                    state="Unknown",
-                    email=""
+     if not url or not company_name:
+        st.error("Please provide both website URL and company name")
+     else:
+        try:
+            # ✅ INITIALIZE PIPELINE (THIS WAS MISSING)
+            pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
+
+            # ✅ Create full LeadInput (required by schema)
+            lead = LeadInput(
+                business_name=company_name,
+                website_url=url,
+                category="Unknown",
+                city="Unknown",
+                state="Unknown",
+                email=""
+            )
+
+            # ✅ Process lead
+            result = pipeline.process_lead(lead)
+
+            pipeline.cleanup()
+
+            if result:
+                st.session_state.results.append(result)
+                save_results(user_email, st.session_state.results)
+
+                # Deduct credit (same as CSV)
+                users[user_email]['credits'] -= 1
+                users[user_email]['total_processed'] += 1
+                save_users(users)
+                st.session_state.credits = users[user_email]['credits']
+
+                st.success(
+                    f"✅ Lead analyzed successfully! "
+                    f"Priority: {result.priority}"
                 )
-
-                # Process lead
-                result = pipeline.process_lead(lead)
-                pipeline.cleanup()
-
-                if result:
-                    st.session_state.results.append(result)
-                    save_results(user_email, st.session_state.results)
-
-                    # Deduct credit
-                    users[user_email]['credits'] -= 1
-                    users[user_email]['total_processed'] += 1
-                    save_users(users)
-                    st.session_state.credits = users[user_email]['credits']
-
-                    st.success(
-                        f"✅ Lead analyzed successfully! "
-                        f"Priority: {result.priority}"
-                    )
-                    st.rerun()
-                    
-            except Exception as e:
-                st.error(f"Error processing lead: {e}")
-    
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Error processing lead: {e}")
     st.markdown("---")
 
-    # Display previous single-lead results
+# 🔁 Re-display previous single-lead results (after rerun)
     if st.session_state.results:
-        st.markdown("## 📊 Analyzed Leads")
-        display_lead_results(st.session_state.results)
+      st.markdown("## 📊 Analyzed Leads")
+      display_lead_results(st.session_state.results)
+
 
     st.markdown("---")
+    
     
     # Upload section
     st.header("Full Batch Upload")
@@ -1038,6 +1084,14 @@ def main_app():
                     if st.button("💳 Buy 25 Credits ($25)", use_container_width=True):
                         st.session_state.show_payment = True
                         st.rerun()
+                # with col2:
+                #     if st.button("⭐ Buy 200 Credits (₹1,499)", use_container_width=True):
+                #         st.session_state.show_payment = True
+                #         st.rerun()
+                # with col3:
+                #     if st.button("🚀 Buy 500 Credits (₹2,999)", use_container_width=True):
+                #         st.session_state.show_payment = True
+                #         st.rerun()
                 
                 return
             
@@ -1129,11 +1183,11 @@ def main_app():
                     users[user_email]['total_processed'] += num_leads
                     save_users(users)
                     st.session_state.credits = users[user_email]['credits']
-                    
-                    # Persist CSV results to disk
+                    # ✅ Persist CSV results to disk (THIS WAS MISSING)
                     st.session_state.results.extend(results)
                     save_results(user_email, st.session_state.results)
 
+                    
                     # Display results
                     st.header("4️⃣ Results & Insights")
                     
@@ -1270,18 +1324,9 @@ def main_app():
 
 
 def main():
-    """Main entry point with proper initialization order"""
-    # 1️⃣ Initialize session state FIRST (no cookie access)
+    """Main entry point"""
     init_session_state()
-
-    # 2️⃣ Wait for cookies to be ready
-    if not cookies.ready():
-        st.stop()
-
-    # 3️⃣ Try to restore session from cookies (safe zone)
-    restore_session_from_cookies(cookies)
-
-    # 4️⃣ Route based on login state
+    
     if st.session_state.logged_in:
         main_app()
     else:
@@ -1289,4 +1334,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()    
