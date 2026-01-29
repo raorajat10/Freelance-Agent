@@ -204,34 +204,21 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def init_session_state():
-    if 'logged_in' not in st.session_state:
-        saved_email = cookies.get("user_email")
-        expiry = cookies.get("expiry")
+    # 🔒 ALWAYS define defaults FIRST
+    defaults = {
+        "logged_in": False,
+        "user_email": None,
+        "credits": 0,
+        "show_payment": False,
+        "processing": False,
+        "results": [],
+        "analyzed_count": 0,
+    }
 
-        if saved_email and expiry and time.time() < float(expiry):
-           users = load_users()
-           if saved_email in users:
-              st.session_state.logged_in = True
-              st.session_state.user_email = saved_email
-              st.session_state.credits = users[saved_email]['credits']
-
-            # load saved results
-              saved_results = load_results(saved_email)
-              st.session_state.results = [LeadOutput(**r) for r in saved_results]
-    if 'user_email' not in st.session_state:
-        st.session_state.user_email = None
-    if 'credits' not in st.session_state:
-        st.session_state.credits = 0
-    if 'show_payment' not in st.session_state:
-        st.session_state.show_payment = False
-    if 'processing' not in st.session_state:
-        st.session_state.processing = False
-    if 'results' not in st.session_state:
-        st.session_state.results = []
-    if 'analyzed_count' not in st.session_state:
-        st.session_state.analyzed_count = 0  
-          
-
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value    
+   
 # Advanced CSS with animations
 st.markdown("""
 <style>
@@ -1321,14 +1308,14 @@ def main_app():
 
 
 def main():
-    # ✅ ALWAYS FIRST
+    # 1️⃣ ALWAYS init session state first
     init_session_state()
 
-    # ✅ cookie readiness check goes HERE
+    # 2️⃣ Wait for cookies
     if not cookies.ready():
         st.stop()
 
-    # 🔐 Auto-login from cookie
+    # 3️⃣ Auto-login from cookie (SAFE ZONE)
     if not st.session_state.logged_in:
         saved_email = cookies.get("user_email")
         expiry = cookies.get("expiry")
@@ -1338,10 +1325,14 @@ def main():
             if saved_email in users:
                 st.session_state.logged_in = True
                 st.session_state.user_email = saved_email
-                st.session_state.credits = users[saved_email]['credits']
-                st.session_state.results = load_results(saved_email)
+                st.session_state.credits = users[saved_email]["credits"]
 
-    # ✅ SAFE to read now
+                saved_results = load_results(saved_email)
+                st.session_state.results = [
+                    LeadOutput(**r) for r in saved_results
+                ]
+
+    # 4️⃣ Route
     if st.session_state.logged_in:
         main_app()
     else:
