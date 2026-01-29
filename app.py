@@ -14,15 +14,6 @@ from src.agents.outreach_generator import OutreachGenerator
 from src.models.schemas import LeadInput, LeadOutput
 from streamlit_cookies_manager import EncryptedCookieManager
 
-cookies = EncryptedCookieManager(
-    prefix="leadqualifier_",
-    password="super-secret-password-change-this"
-)
-
-if not cookies.ready():
-    st.stop()
-
-
 
 RESULTS_DIR = "data/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -55,6 +46,14 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+cookies = EncryptedCookieManager(
+    prefix="leadqualifier_",
+    password="super-secret-password-change-this"
+)
+
+if not cookies.ready():
+    st.stop()
 
 # API Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
