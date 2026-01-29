@@ -52,8 +52,6 @@ cookies = EncryptedCookieManager(
     password="super-secret-password-change-this"
 )
 
-if not cookies.ready():
-    st.stop()
 
 # API Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -1323,10 +1321,14 @@ def main_app():
 
 
 def main():
-    # ✅ ALWAYS initialize session state FIRST
+    # ✅ ALWAYS FIRST
     init_session_state()
 
-    # 🔐 Auto-login from cookie (AFTER init)
+    # ✅ cookie readiness check goes HERE
+    if not cookies.ready():
+        st.stop()
+
+    # 🔐 Auto-login from cookie
     if not st.session_state.logged_in:
         saved_email = cookies.get("user_email")
         expiry = cookies.get("expiry")
@@ -1337,17 +1339,14 @@ def main():
                 st.session_state.logged_in = True
                 st.session_state.user_email = saved_email
                 st.session_state.credits = users[saved_email]['credits']
+                st.session_state.results = load_results(saved_email)
 
-                saved_results = load_results(saved_email)
-                st.session_state.results = [
-                    LeadOutput(**r) for r in saved_results
-                ]
-
-    # ✅ NOW it is safe to read logged_in
+    # ✅ SAFE to read now
     if st.session_state.logged_in:
         main_app()
     else:
         login_page()
+
 
 
 
