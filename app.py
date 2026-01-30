@@ -31,26 +31,6 @@ STRIPE_KEY = os.getenv("STRIPE_KEY", "")
 
 USER_DB_FILE = "users.json"
 
-def get_authenticated_email():
-    try:
-        return st.experimental_user.email
-    except Exception:
-        return None
-
-class UserProxy:
-    def __init__(self):
-        self._user = getattr(st, "experimental_user", None)
-
-    @property
-    def is_logged_in(self):
-        return bool(self._user and self._user.email)
-
-    @property
-    def email(self):
-        return getattr(self._user, "email", None)
-
-user = UserProxy()
-
 
 def get_results_file(user_email: str) -> str:
     """Generate safe file path for user results"""
@@ -466,6 +446,7 @@ def main_app():
 def process_leads(df, user_email, num_leads):
     """Process leads through qualification pipeline"""
     try:
+
         
         pipeline = LeadQualificationPipeline()
         leads = [LeadInput(**row) for _, row in df.iterrows()]
@@ -667,11 +648,9 @@ def main():
     init_session_state()
     
     # Check if user is logged in using st.user
-    if not user.is_logged_in:
-          st.stop()
-
-    st.write(user.email)
-
+    if not st.user.is_logged_in:
+        login_page()
+        st.stop()
     
     # User is logged in, show main app
     main_app()
