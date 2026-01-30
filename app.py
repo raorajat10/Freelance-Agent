@@ -31,6 +31,11 @@ STRIPE_KEY = os.getenv("STRIPE_KEY", "")
 
 USER_DB_FILE = "users.json"
 
+def get_authenticated_email():
+    try:
+        return st.experimental_user.email
+    except Exception:
+        return None
 
 def get_results_file(user_email: str) -> str:
     """Generate safe file path for user results"""
@@ -164,8 +169,8 @@ def login_page():
 def main_app():
     """Main application interface"""
     # Get user info from st.user
-    user_email = st.user.get('email', 'unknown@example.com')
-    user_name = st.user.get('name', 'User')
+    user_email = user_email.get('email', 'unknown@example.com')
+    user_name = user_email.get('name', 'User')
     
     # Initialize or get user data
     user_data = get_or_create_user(user_email, user_name)
@@ -647,9 +652,11 @@ def main():
     init_session_state()
     
     # Check if user is logged in using st.user
-    if not st.user.is_logged_in:
-        login_page()
+    user_email = get_authenticated_email()
+    if not user_email:
+        st.error("Not authenticated")
         st.stop()
+
     
     # User is logged in, show main app
     main_app()
