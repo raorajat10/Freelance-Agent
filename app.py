@@ -32,6 +32,37 @@ STRIPE_KEY = os.getenv("STRIPE_KEY", "")
 USER_DB_FILE = "users.json"
 
 
+class LeadQualificationPipeline:
+    def __init__(self, OPENAI_API_KEY: str):
+        self.inspector = WebsiteInspector()
+        self.classifier = WebsiteClassifier()
+        self.scorer = LeadScorer()
+        self.outreach_gen = OutreachGenerator(api_key=OPENAI_API_KEY)
+    
+    def process_lead(self, lead: LeadInput) -> LeadOutput:
+        inspection = self.inspector.inspect(lead.website_url)
+        classification = self.classifier.classify(inspection)
+        scoring = self.scorer.score(lead, classification)
+        
+        if scoring.priority.value in ['HIGH', 'MEDIUM']:
+            outreach = self.outreach_gen.generate(lead, classification)
+        else:
+            outreach = "Low priority - no outreach generated"
+        
+        return LeadOutput(
+            business_name=lead.business_name,
+            website_status=classification.website_status.value,
+            website_issues=classification.issues,
+            lead_score=scoring.lead_score,
+            priority=scoring.priority.value,
+            outreach_message=outreach
+        )
+    
+    def cleanup(self):
+        self.inspector.close()
+
+
+
 def get_results_file(user_email: str) -> str:
     """Generate safe file path for user results"""
     safe_email = user_email.replace("@", "_at_").replace(".", "_")
@@ -276,7 +307,7 @@ def main_app():
             try:
                 
                 with st.spinner("⚡ Analyzing lead..."):
-                    pipeline = LeadQualificationPipeline()
+                    pipeline = LeadQualificationPipeline(OPENAI_API_KEY)
                     
                     # Create lead input
                     lead = LeadInput(
@@ -448,7 +479,7 @@ def process_leads(df, user_email, num_leads):
     try:
 
         
-        pipeline = LeadQualificationPipeline()
+        pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
         leads = [LeadInput(**row) for _, row in df.iterrows()]
         
         results = []
@@ -641,7 +672,8 @@ def display_results(results, num_leads, user_email, users):
     - {users[user_email]['credits']} credits remaining
     - {high_priority} high-priority leads ready to contact
     """)
-
+def is_user_logged_in():
+    return bool(st.user.to_dict())
 
 def main():
     """Main entry point"""
@@ -660,31 +692,3 @@ if __name__ == "__main__":
     main()
 
 
-class LeadQualificationPipeline:
-    def __init__(self, api_key: str):
-        self.inspector = WebsiteInspector()
-        self.classifier = WebsiteClassifier()
-        self.scorer = LeadScorer()
-        self.outreach_gen = OutreachGenerator(api_key=api_key)
-    
-    def process_lead(self, lead: LeadInput) -> LeadOutput:
-        inspection = self.inspector.inspect(lead.website_url)
-        classification = self.classifier.classify(inspection)
-        scoring = self.scorer.score(lead, classification)
-        
-        if scoring.priority.value in ['HIGH', 'MEDIUM']:
-            outreach = self.outreach_gen.generate(lead, classification)
-        else:
-            outreach = "Low priority - no outreach generated"
-        
-        return LeadOutput(
-            business_name=lead.business_name,
-            website_status=classification.website_status.value,
-            website_issues=classification.issues,
-            lead_score=scoring.lead_score,
-            priority=scoring.priority.value,
-            outreach_message=outreach
-        )
-    
-    def cleanup(self):
-        self.inspector.close()
