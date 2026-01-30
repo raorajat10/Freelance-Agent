@@ -65,6 +65,7 @@ def is_user_logged_in() -> bool:
     return st.session_state.get("logged_in", False)
 
 
+
 def get_results_file(user_email: str) -> str:
     """Generate safe file path for user results"""
     safe_email = user_email.replace("@", "_at_").replace(".", "_")
@@ -149,58 +150,42 @@ def convert_df_to_excel(df):
 
 
 def login_page():
-    """Display login page with OIDC authentication"""
     st.markdown("""
         <div style='text-align: center; padding: 3rem 0;'>
-            <h1 style='font-size: 3rem; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-                🎯 Lead Qualifier Pro
-            </h1>
-            <p style='font-size: 1.2rem; color: #666; margin-top: 1rem;'>
-                AI-Powered Lead Qualification & Outreach Generation
-            </p>
+            <h1>🎯 Lead Qualifier Pro</h1>
+            <p>AI-Powered Lead Qualification</p>
         </div>
     """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        st.markdown("""
-            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                       padding: 2rem; border-radius: 1rem; text-align: center; color: white;'>
-                <h3 style='margin: 0 0 1rem 0;'>🚀 Get Started</h3>
-                <p style='margin: 0 0 1.5rem 0; opacity: 0.9;'>
-                    Sign in to start qualifying leads with AI
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Login button
-        if st.button("🔐 Continue", use_container_width=True, type="primary"):
-               st.session_state["logged_in"] = True
-               st.rerun()
 
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        st.info("""
-            **✨ What you get:**
-            - 10 free credits to start
-            - AI-powered lead qualification
-            - Automated outreach message generation
-            - Export results to Excel, CSV, or JSON
-        """)
+    st.markdown("---")
+
+    email = st.text_input(
+        "📧 Enter your email to continue",
+        placeholder="you@example.com"
+    )
+
+    name = st.text_input(
+        "👤 Your name (optional)",
+        placeholder="Rajat"
+    )
+
+    if st.button("🚀 Continue", type="primary", use_container_width=True):
+        if not email:
+            st.error("Please enter your email")
+            return
+
+        st.session_state["logged_in"] = True
+        st.session_state["user_email"] = email
+        st.session_state["user_name"] = name or email.split("@")[0]
+        st.rerun()
 
 
 def main_app():
     """Main application interface"""
     # Get user info from st.user
-    user_email = st.user.get('email', 'unknown@example.com')
-    user_name = st.user.get('name', 'User')
+    user_email = st.session_state.get("user_email")
+    user_name = st.session_state.get("user_name", "User")
+
     
     # Initialize or get user data
     user_data = get_or_create_user(user_email, user_name)
