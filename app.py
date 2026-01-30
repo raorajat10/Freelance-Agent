@@ -61,8 +61,8 @@ class LeadQualificationPipeline:
     def cleanup(self):
         self.inspector.close()
 
-def is_user_logged_in() -> bool:
-    return st.session_state.get("logged_in", False)
+# def is_user_logged_in() -> bool:
+#     return st.session_state.get("logged_in", False)
 
 
 
@@ -159,32 +159,17 @@ def login_page():
 
     st.markdown("---")
 
-    email = st.text_input(
-        "📧 Enter your email to continue",
-        placeholder="you@example.com"
-    )
+    st.info("Sign in with Google to continue")
 
-    name = st.text_input(
-        "👤 Your name (optional)",
-        placeholder="Rajat"
-    )
-
-    if st.button("🚀 Continue", type="primary", use_container_width=True):
-        if not email:
-            st.error("Please enter your email")
-            return
-
-        st.session_state["logged_in"] = True
-        st.session_state["user_email"] = email
-        st.session_state["user_name"] = name or email.split("@")[0]
-        st.rerun()
-
+    if st.button("🔐 Sign in with Google", type="primary", use_container_width=True):
+        st.login()
 
 def main_app():
     """Main application interface"""
     # Get user info from st.user
-    user_email = st.session_state.get("user_email")
-    user_name = st.session_state.get("user_name", "User")
+    user_email = st.user.email
+    user_name = st.user.name
+
 
     
     # Initialize or get user data
@@ -230,7 +215,7 @@ def main_app():
         
         # Logout button
         if st.button("🚪 Logout", use_container_width=True):
-             st.session_state.clear()
+             st.logout()
              st.rerun()
 
     
@@ -667,12 +652,12 @@ def display_results(results, num_leads, user_email, users):
 def main():
     init_session_state()
 
-    if not is_user_logged_in():
+    if not st.user.is_logged_in:
         login_page()
         st.stop()
-    
-    # User is logged in, show main app
+
     main_app()
+
 
 
 if __name__ == "__main__":
