@@ -61,6 +61,8 @@ class LeadQualificationPipeline:
     def cleanup(self):
         self.inspector.close()
 
+def is_user_logged_in() -> bool:
+    return st.session_state.get("logged_in", False)
 
 
 def get_results_file(user_email: str) -> str:
@@ -178,8 +180,10 @@ def login_page():
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Login button
-        if st.button("🔐 Sign in with Google", use_container_width=True, type="primary"):
-            st.login()
+        if st.button("🔐 Continue", use_container_width=True, type="primary"):
+               st.session_state["logged_in"] = True
+               st.rerun()
+
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -241,7 +245,9 @@ def main_app():
         
         # Logout button
         if st.button("🚪 Logout", use_container_width=True):
-            st.logout()
+             st.session_state.clear()
+             st.rerun()
+
     
     # Main content
     st.markdown("""
@@ -676,10 +682,8 @@ def is_user_logged_in():
     return bool(st.user.to_dict())
 
 def main():
-    """Main entry point"""
     init_session_state()
-    
-    # Check if user is logged in using st.user
+
     if not is_user_logged_in():
         login_page()
         st.stop()
