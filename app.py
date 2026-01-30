@@ -678,8 +678,6 @@ def display_results(results, num_leads, user_email, users):
     - {users[user_email]['credits']} credits remaining
     - {high_priority} high-priority leads ready to contact
     """)
-def is_user_logged_in():
-    return bool(st.user.to_dict())
 
 def main():
     init_session_state()
