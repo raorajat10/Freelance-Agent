@@ -680,7 +680,7 @@ def main():
     init_session_state()
     
     # Check if user is logged in using st.user
-    if not st.user.is_logged_in:
+    if not is_user_logged_in():
         login_page()
         st.stop()
     
