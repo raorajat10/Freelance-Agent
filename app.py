@@ -37,6 +37,21 @@ def get_authenticated_email():
     except Exception:
         return None
 
+class UserProxy:
+    def __init__(self):
+        self._user = getattr(st, "experimental_user", None)
+
+    @property
+    def is_logged_in(self):
+        return bool(self._user and self._user.email)
+
+    @property
+    def email(self):
+        return getattr(self._user, "email", None)
+
+user = UserProxy()
+
+
 def get_results_file(user_email: str) -> str:
     """Generate safe file path for user results"""
     safe_email = user_email.replace("@", "_at_").replace(".", "_")
