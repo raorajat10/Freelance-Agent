@@ -5,6 +5,10 @@ from io import BytesIO
 import os
 from datetime import datetime
 import hashlib
+import sys
+
+# Add the project root to Python path for imports
+sys.path.insert(0, os.path.dirname(__file__))
 
 from src.agents.website_inspector import WebsiteInspector
 from src.agents.website_classifier import WebsiteClassifier
@@ -23,7 +27,7 @@ RESULTS_DIR = "data/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # API Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "") or st.secrets.get("OPENAI_API_KEY", "")
 
 # Payment Configuration
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
@@ -61,9 +65,31 @@ class LeadQualificationPipeline:
     def cleanup(self):
         self.inspector.close()
 
-# def is_user_logged_in() -> bool:
-#     return st.session_state.get("logged_in", False)
 
+def is_user_logged_in() -> bool:
+    """Check if user is logged in - compatible with both local and Streamlit Cloud"""
+    try:
+        # Try to access is_logged_in attribute
+        return st.user.is_logged_in
+    except (AttributeError, KeyError):
+        # Authentication not configured - use fallback
+        return st.session_state.get("logged_in", False)
+
+
+def get_user_email() -> str:
+    """Get user email - compatible with both local and Streamlit Cloud"""
+    try:
+        return st.user.email
+    except (AttributeError, KeyError):
+        return st.session_state.get("user_email", "demo@example.com")
+
+
+def get_user_name() -> str:
+    """Get user name - compatible with both local and Streamlit Cloud"""
+    try:
+        return st.user.name
+    except (AttributeError, KeyError):
+        return st.session_state.get("user_name", "Demo User")
 
 
 def get_results_file(user_email: str) -> str:
@@ -161,16 +187,34 @@ def login_page():
 
     st.info("Sign in with Google to continue")
 
-    if st.button("🔐 Sign in with Google", type="primary", use_container_width=True):
-        st.login()
+    if st.button("🔐 Sign in with Google", type="primary", width="stretch"):
+        try:
+            st.login()
+        except Exception as e:
+            st.error(f"Authentication error: {str(e)}")
+            st.info("""
+            **For Streamlit Cloud deployment:**
+            
+            Update your `.streamlit/secrets.toml` with your app URL:
+            
+            ```toml
+            [auth]
+            redirect_uri = "https://your-app-name.streamlit.app/oauth2callback"
+            cookie_secret = "your-secret"
+            client_id = "your-google-client-id"
+            client_secret = "your-google-client-secret"
+            server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
+            ```
+            
+            Also update your Google OAuth redirect URI to match your Streamlit Cloud URL.
+            """)
+
 
 def main_app():
     """Main application interface"""
-    # Get user info from st.user
-    user_email = st.user.email
-    user_name = st.user.name
-
-
+    # Get user info using compatibility functions
+    user_email = get_user_email()
+    user_name = get_user_name()
     
     # Initialize or get user data
     user_data = get_or_create_user(user_email, user_name)
@@ -214,9 +258,15 @@ def main_app():
         st.markdown("---")
         
         # Logout button
-        if st.button("🚪 Logout", use_container_width=True):
-             st.logout()
-             st.rerun()
+        if st.button("🚪 Logout", width="stretch"):
+            try:
+                st.logout()
+            except:
+                # Fallback logout for non-authenticated mode
+                st.session_state.logged_in = False
+                st.session_state.user_email = None
+                st.session_state.user_name = None
+            st.rerun()
 
     
     # Main content
@@ -227,222 +277,117 @@ def main_app():
         </h1>
     """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown("""
+        <p style='text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 2rem;'>
+            Upload your leads, and we'll analyze their websites to help you prioritize outreach
+        </p>
+    """, unsafe_allow_html=True)
     
-    # Instructions
-    with st.expander("📖 How to Use", expanded=False):
+    # Tabs
+    tab1, tab2, tab3 = st.tabs(["📤 Upload Leads", "📊 Results", "💳 Credits"])
+    
+    with tab1:
+        upload_section(user_email)
+    
+    with tab2:
+        results_section()
+    
+    with tab3:
+        credits_section(user_email)
+
+
+def upload_section(user_email):
+    """Upload and processing section"""
+    st.markdown("### Upload Your Lead List")
+    
+    with st.expander("📋 CSV Format Requirements", expanded=False):
         st.markdown("""
-            ### Quick Start Guide
-            
-            1. **Upload CSV File**: Click the file uploader below
-            2. **Required Columns**: Your CSV must have these columns:
-               - `business_name`: Name of the business
-               - `category`: Business category/industry
-               - `city`: Business city
-               - `state`: Business state
-               - `website_url`: Business website URL
-               - `email`: Contact email (optional)
-            3. **Process**: Click "Process Leads" to start qualification
-            4. **Download**: Export your results in Excel, CSV, or JSON format
-            
-            **💡 Tip**: Each lead costs 1 credit. High-priority leads include personalized outreach messages!
+        Your CSV file should have the following columns:
+        - `business_name` - Company name
+        - `website_url` - Full website URL (including http:// or https://)
+        - `contact_name` - Contact person's name (optional)
+        - `contact_email` - Contact person's email (optional)
+        
+        **Example:**
+        ```
+        business_name,website_url,contact_name,contact_email
+        Acme Corp,https://acme.com,John Doe,john@acme.com
+        Tech Solutions,https://techsolutions.io,Jane Smith,jane@techsolutions.io
+        ```
         """)
+        
+        # Sample CSV download
+        sample_data = {
+            'business_name': ['Acme Corp', 'Tech Solutions', 'Digital Agency'],
+            'website_url': ['https://acme.com', 'https://techsolutions.io', 'https://digitalagency.co'],
+            'contact_name': ['John Doe', 'Jane Smith', 'Bob Johnson'],
+            'contact_email': ['john@acme.com', 'jane@techsolutions.io', 'bob@digitalagency.co']
+        }
+        sample_df = pd.DataFrame(sample_data)
+        sample_csv = sample_df.to_csv(index=False)
+        
+        st.download_button(
+            label="📥 Download Sample CSV",
+            data=sample_csv,
+            file_name="sample_leads.csv",
+            mime="text/csv",
+            width="stretch"
+        )
     
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Single Lead Analyzer Section
-    st.header("🎯 Quick Lead Analyzer")
-    st.markdown("Analyze a single lead quickly - costs 1 credit")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        single_url = st.text_input(
-            "Website URL",
-            placeholder="https://example.com",
-            help="Enter the complete website URL",
-            key="single_url"
-        )
-    
-    with col2:
-        single_company = st.text_input(
-            "Company Name",
-            placeholder="Acme Inc.",
-            help="Enter the company name",
-            key="single_company"
-        )
-    
-    if st.button("🚀 Analyze Single Lead", type="primary", use_container_width=True):
-        # Credit check
-        if st.session_state.credits <= 0:
-            st.error("❌ Insufficient credits! You need at least 1 credit.")
-            st.info("💡 Purchase more credits to continue")
-        elif not single_url or not single_company:
-            st.error("❌ Please provide both website URL and company name")
-        else:
-            try:
-                
-                with st.spinner("⚡ Analyzing lead..."):
-                    pipeline = LeadQualificationPipeline(OPENAI_API_KEY)
-                    
-                    # Create lead input
-                    lead = LeadInput(
-                        business_name=single_company,
-                        website_url=single_url,
-                        category="Unknown",
-                        city="Unknown",
-                        state="Unknown",
-                        email=""
-                    )
-                    
-                    # Process lead
-                    result = pipeline.process_lead(lead)
-                    pipeline.cleanup()
-                    
-                    if result:
-                        # Save result
-                        st.session_state.results.append(result)
-                        save_results(user_email, st.session_state.results)
-                        
-                        # Deduct credit
-                        users = load_users()
-                        users[user_email]['credits'] -= 1
-                        users[user_email]['total_processed'] += 1
-                        save_users(users)
-                        st.session_state.credits = users[user_email]['credits']
-                        
-                        st.success(f"✅ Lead analyzed! Priority: **{result.priority}** | Score: **{result.lead_score}**")
-                        st.rerun()
-            
-            except Exception as e:
-                st.error(f"❌ Error analyzing lead: {str(e)}")
-                import traceback
-                with st.expander("🔍 Technical details"):
-                    st.code(traceback.format_exc())
-    
-    # Display analyzed leads
-    if st.session_state.results:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📊 Your Analyzed Leads")
-        
-        # Quick metrics
-        high_count = sum(1 for r in st.session_state.results if r.priority == "HIGH")
-        medium_count = sum(1 for r in st.session_state.results if r.priority == "MEDIUM")
-        low_count = sum(1 for r in st.session_state.results if r.priority == "LOW")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total", len(st.session_state.results))
-        col2.metric("🔥 High", high_count)
-        col3.metric("📊 Medium", medium_count)
-        col4.metric("📉 Low", low_count)
-        
-        # Results table
-        results_df = pd.DataFrame([r.model_dump() for r in st.session_state.results])
-        results_df['website_issues'] = results_df['website_issues'].apply(
-            lambda x: '; '.join(x) if x else ''
-        )
-        
-        st.dataframe(results_df, use_container_width=True, height=300)
-        
-        # Show high priority leads with outreach
-        high_priority_results = [r for r in st.session_state.results if r.priority == "HIGH"]
-        if high_priority_results:
-            st.markdown("### 🔥 High Priority Leads - Ready to Contact!")
-            for result in high_priority_results:
-                with st.expander(f"⭐ {result.business_name} (Score: {result.lead_score})"):
-                    col1, col2 = st.columns([2, 1])
-                    with col1:
-                        st.markdown(f"**Status:** {result.website_status}")
-                        st.markdown(f"**Issues:** {'; '.join(result.website_issues)}")
-                    with col2:
-                        st.markdown(f"**Score:** {result.lead_score}")
-                        st.markdown(f"**Priority:** {result.priority}")
-                    
-                    st.markdown("**📧 Outreach Message:**")
-                    st.info(result.outreach_message)
-                    st.code(result.outreach_message, language=None)
-        
-        # Download results
-        st.markdown("### 💾 Download Results")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            excel_data = convert_df_to_excel(results_df)
-            st.download_button(
-                "📊 Excel",
-                excel_data,
-                f"leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
-            )
-        
-        with col2:
-            csv_data = results_df.to_csv(index=False)
-            st.download_button(
-                "📄 CSV",
-                csv_data,
-                f"leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        
-        with col3:
-            json_data = json.dumps([r.model_dump() for r in st.session_state.results], indent=2)
-            st.download_button(
-                "📦 JSON",
-                json_data,
-                f"leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
-                use_container_width=True
-            )
-    
-    st.markdown("---")
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Batch CSV Upload section
-    st.markdown("Upload a CSV file to analyze multiple leads at once")
     
     uploaded_file = st.file_uploader(
-        "Upload CSV file with leads",
+        "Choose a CSV file",
         type=['csv'],
-        help="CSV must contain: business_name, category, city, state, website_url, email"
+        help="Upload a CSV file containing your lead information"
     )
     
-    if uploaded_file:
+    if uploaded_file is not None:
         try:
             df = pd.read_csv(uploaded_file)
             
             # Validate required columns
-            required_cols = ['business_name', 'category', 'city', 'state', 'website_url']
+            required_cols = ['business_name', 'website_url']
             missing_cols = [col for col in required_cols if col not in df.columns]
             
             if missing_cols:
                 st.error(f"❌ Missing required columns: {', '.join(missing_cols)}")
-                st.info("💡 Your CSV must have: business_name, category, city, state, website_url, email (optional)")
-            else:
-                st.success(f"✅ File loaded successfully! Found {len(df)} leads")
-                
-                # Preview
-                st.subheader("📋 Data Preview")
-                st.dataframe(df.head(10), use_container_width=True)
-                
-                # Process button
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.header("⚙️ Review & Process")
-                
+                return
+            
+            # Fill optional columns
+            if 'contact_name' not in df.columns:
+                df['contact_name'] = ''
+            if 'contact_email' not in df.columns:
+                df['contact_email'] = ''
+            
+            # Preview
+            st.success(f"✅ File loaded successfully! Found {len(df)} leads")
+            
+            with st.expander("👀 Preview Data", expanded=True):
+                st.dataframe(df.head(10), width=None)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Processing section
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
                 num_leads = len(df)
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Leads to Process", num_leads)
-                with col2:
-                    st.metric("Credits Required", num_leads)
+                st.info(f"""
+                **📊 Processing Summary:**
+                - {num_leads} leads to process
+                - {num_leads} credit(s) will be used
+                - {st.session_state.credits} credit(s) available
+                """)
+            
+            with col2:
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 if num_leads > st.session_state.credits:
                     st.error(f"❌ Insufficient credits! You need {num_leads} credits but only have {st.session_state.credits}")
                     st.info("💡 Purchase more credits to continue")
                 else:
-                    if st.button("🚀 Process Leads", type="primary", use_container_width=True):
+                    if st.button("🚀 Process Leads", type="primary", width="stretch"):
                         process_leads(df, user_email, num_leads)
         
         except Exception as e:
@@ -453,8 +398,6 @@ def main_app():
 def process_leads(df, user_email, num_leads):
     """Process leads through qualification pipeline"""
     try:
-
-        
         pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
         leads = [LeadInput(**row) for _, row in df.iterrows()]
         
@@ -578,7 +521,7 @@ def display_results(results, num_leads, user_email, users):
     )
     
     st.subheader("📋 All Results")
-    st.dataframe(df_results, use_container_width=True, height=300)
+    st.dataframe(df_results, width=None, height=300)
     
     # High priority leads detail
     if high_priority > 0:
@@ -617,7 +560,7 @@ def display_results(results, num_leads, user_email, users):
             data=excel_data,
             file_name=f"qualified_leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
+            width="stretch"
         )
     
     with col2:
@@ -627,7 +570,7 @@ def display_results(results, num_leads, user_email, users):
             data=csv_data,
             file_name=f"qualified_leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width="stretch"
         )
     
     with col3:
@@ -637,7 +580,7 @@ def display_results(results, num_leads, user_email, users):
             data=json_data,
             file_name=f"qualified_leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json",
-            use_container_width=True
+            width="stretch"
         )
     
     # Success message
@@ -649,18 +592,151 @@ def display_results(results, num_leads, user_email, users):
     - {high_priority} high-priority leads ready to contact
     """)
 
+
+def results_section():
+    """Results viewing section"""
+    st.markdown("### 📊 Your Previous Results")
+    
+    if not st.session_state.results:
+        st.info("No results yet. Upload and process leads in the 'Upload Leads' tab!")
+        return
+    
+    # Calculate metrics
+    high, medium, low, avg_score = calculate_priority_metrics(st.session_state.results)
+    
+    # Display metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Leads", len(st.session_state.results))
+    with col2:
+        st.metric("HIGH Priority", high)
+    with col3:
+        st.metric("MEDIUM Priority", medium)
+    with col4:
+        st.metric("Avg Score", f"{avg_score:.1f}")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Results table
+    results_data = [r.model_dump() for r in st.session_state.results]
+    df_results = pd.DataFrame(results_data)
+    df_results['website_issues'] = df_results['website_issues'].apply(
+        lambda x: '; '.join(x) if x else ''
+    )
+    
+    st.dataframe(df_results, width=None, height=400)
+    
+    # Download buttons
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        excel_data = convert_df_to_excel(df_results)
+        st.download_button(
+            label="📊 Download Excel",
+            data=excel_data,
+            file_name=f"all_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            width="stretch"
+        )
+    
+    with col2:
+        csv_data = df_results.to_csv(index=False)
+        st.download_button(
+            label="📄 Download CSV",
+            data=csv_data,
+            file_name=f"all_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            width="stretch"
+        )
+    
+    with col3:
+        json_data = json.dumps(results_data, indent=2)
+        st.download_button(
+            label="📦 Download JSON",
+            data=json_data,
+            file_name=f"all_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json",
+            width="stretch"
+        )
+
+
+def credits_section(user_email):
+    """Credits management section"""
+    st.markdown("### 💳 Manage Your Credits")
+    
+    users = load_users()
+    user_info = users.get(user_email, {})
+    
+    # Current balance
+    st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                   padding: 2rem; border-radius: 1rem; text-align: center; color: white; margin-bottom: 2rem;'>
+            <h1 style='margin: 0; font-size: 3rem;'>{user_info.get('credits', 0)}</h1>
+            <p style='margin: 0.5rem 0 0 0; font-size: 1.2rem;'>Available Credits</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Usage stats
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Total Processed", user_info.get('total_processed', 0))
+    with col2:
+        st.metric("Subscription Plan", user_info.get('subscription', 'free').upper())
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Credit packages
+    st.subheader("💰 Purchase Credits")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+            <div style='border: 2px solid #667eea; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
+                <h3 style='color: #667eea;'>Starter</h3>
+                <h2>50 Credits</h2>
+                <p style='font-size: 1.5rem; color: #667eea;'>$49</p>
+                <p style='color: #666;'>Perfect for small teams</p>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Buy Starter", width="stretch"):
+            st.info("Payment integration coming soon!")
+    
+    with col2:
+        st.markdown("""
+            <div style='border: 2px solid #764ba2; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
+                <h3 style='color: #764ba2;'>Professional</h3>
+                <h2>200 Credits</h2>
+                <p style='font-size: 1.5rem; color: #764ba2;'>$149</p>
+                <p style='color: #666;'>Most popular choice</p>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Buy Professional", width="stretch"):
+            st.info("Payment integration coming soon!")
+    
+    with col3:
+        st.markdown("""
+            <div style='border: 2px solid #e74c3c; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
+                <h3 style='color: #e74c3c;'>Enterprise</h3>
+                <h2>1000 Credits</h2>
+                <p style='font-size: 1.5rem; color: #e74c3c;'>$499</p>
+                <p style='color: #666;'>Best value for scale</p>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Buy Enterprise", width="stretch"):
+            st.info("Payment integration coming soon!")
+
+
 def main():
     init_session_state()
 
-    if not st.user.is_logged_in:
+    if not is_user_logged_in():
         login_page()
         st.stop()
 
     main_app()
 
 
-
 if __name__ == "__main__":
     main()
-
-
