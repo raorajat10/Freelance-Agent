@@ -667,9 +667,11 @@ def main():
     init_session_state()
     
     # Check if user is logged in using st.user
-    if not st.user.is_logged_in:
-        login_page()
-        st.stop()
+    if not user.is_logged_in:
+          st.stop()
+
+    st.write(user.email)
+
     
     # User is logged in, show main app
     main_app()
