@@ -209,6 +209,102 @@ def login_page():
             Also update your Google OAuth redirect URI to match your Streamlit Cloud URL.
             """)
 
+def show_single_result(result: LeadOutput):
+    st.markdown("---")
+    st.subheader(f"⭐ {result.business_name}")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(f"**Website Status:** {result.website_status}")
+        st.markdown(f"**Priority:** {result.priority}")
+        st.markdown(f"**Lead Score:** {result.lead_score}")
+
+    with col2:
+        st.markdown("**Website Issues:**")
+        if result.website_issues:
+            for issue in result.website_issues:
+                st.write(f"- {issue}")
+        else:
+            st.write("No major issues found")
+
+    st.markdown("### 📧 Outreach Message")
+    st.code(result.outreach_message)
+
+
+def process_single_lead(user_email: str, lead_data: dict):
+    users = load_users()
+            # ✅ Inject safe defaults if missing
+    lead_data.setdefault("category", "Unknown")
+    lead_data.setdefault("city", "Unknown")
+    lead_data.setdefault("state", "Unknown")
+    try:
+        pipeline = LeadQualificationPipeline(OPENAI_API_KEY)
+        lead = LeadInput(**lead_data)
+        with st.spinner("⚡ Analyzing website & scoring lead..."):
+            result = pipeline.process_lead(lead)
+
+        pipeline.cleanup()
+
+        # ✅ Deduct exactly 1 credit
+        users[user_email]["credits"] -= 1
+        users[user_email]["total_processed"] += 1
+        save_users(users)
+
+        st.session_state.credits = users[user_email]["credits"]
+
+        # Save result
+        st.session_state.results.append(result)
+        save_results(user_email, st.session_state.results)
+
+        # UI feedback
+        st.success("✅ Lead qualified successfully!")
+        st.metric("Remaining Credits", st.session_state.credits)
+
+        show_single_result(result)
+
+    except Exception as e:
+        st.error("❌ Failed to process lead")
+        st.exception(e)
+
+
+def single_lead_search(user_email):
+    st.markdown("### 🔍 Single Lead Search")
+    st.caption("Search and qualify one lead using **1 credit**")
+
+    users = load_users()
+    user = users[user_email]
+
+    with st.form("single_lead_form"):
+        business_name = st.text_input("Business Name*", placeholder="Acme Corp")
+        website_url = st.text_input(
+            "Website URL*",
+            placeholder="https://acme.com"
+        )
+        contact_name = st.text_input("Contact Name (optional)")
+        contact_email = st.text_input("Contact Email (optional)")
+
+        submitted = st.form_submit_button("🚀 Qualify Lead")
+
+    if submitted:
+        if not business_name or not website_url:
+            st.error("❌ Business name and website URL are required")
+            return
+
+        if user["credits"] < 1:
+            st.error("❌ You don’t have enough credits")
+            st.info("💡 Buy more credits to continue")
+            return
+
+        process_single_lead(
+            user_email=user_email,
+            lead_data={
+                "business_name": business_name,
+                "website_url": website_url,
+                "contact_name": contact_name,
+                "contact_email": contact_email,
+            }
+        )
 
 def main_app():
     """Main application interface"""
@@ -283,16 +379,22 @@ def main_app():
         </p>
     """, unsafe_allow_html=True)
     
-    # Tabs
-    tab1, tab2, tab3 = st.tabs(["📤 Upload Leads", "📊 Results", "💳 Credits"])
+    #tabs
+    tab1, tab2, tab3, tab4 = st.tabs(
+    ["📤 Upload Leads", "🔍 Single Lead Search", "📊 Results", "💳 Credits"]
+)
+
     
     with tab1:
         upload_section(user_email)
     
     with tab2:
+        single_lead_search(user_email)
+
+    with tab3:
         results_section()
     
-    with tab3:
+    with tab4:
         credits_section(user_email)
 
 
@@ -624,7 +726,7 @@ def results_section():
         lambda x: '; '.join(x) if x else ''
     )
     
-    st.dataframe(df_results, width=None, height=400)
+    st.dataframe(df_results, width='stretch', height=400)
     
     # Download buttons
     st.markdown("<br>", unsafe_allow_html=True)
