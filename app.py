@@ -415,8 +415,8 @@ def main_app():
               Lead Qualifier Pro is built for freelancers, consultants, and teams who sell to businesses
                and want to focus on high-quality opportunities.
 
-**Contact:** leadqualifierpro@gmail.com  
-(or your Twitter handle)
+**Contact:** leadqualifierhelp28@gmail.com  
+**Privacy:** We respect your privacy. Your data is never shared.
 """)
 
     
