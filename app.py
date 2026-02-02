@@ -380,9 +380,44 @@ def main_app():
     """, unsafe_allow_html=True)
     
     #tabs
-    tab1, tab2, tab3, tab4 = st.tabs(
+    tab0 ,tab1, tab2, tab3, tab4 = st.tabs(
     ["📤 Upload Leads", "🔍 Single Lead Search", "📊 Results", "💳 Credits"]
 )
+    with tab0:
+     st.markdown("""
+          <h2>Qualify Business Leads in Seconds</h2>
+
+          <p>
+          Lead Qualifier Pro helps you decide <b>which leads are worth your time</b>.
+          We analyze a business’s website and give you:
+            </p>
+
+          <ul>
+           <li>Lead score & priority</li>
+           <li>Website weaknesses</li>
+           <li>Suggested outreach (for good leads)</li>
+          </ul>
+
+          <hr>
+
+         <h4>How to start</h4>
+          <ol>
+          <li>Upload a CSV of leads, or</li>
+          <li>Search a single lead manually</li>
+          </ol>
+         """, unsafe_allow_html=True)
+
+    st.info("⬅️ Use the tabs above to get started")
+    st.markdown("---")
+    st.markdown("""
+             **About**
+
+              Lead Qualifier Pro is built for freelancers, consultants, and teams who sell to businesses
+               and want to focus on high-quality opportunities.
+
+**Contact:** leadqualifierpro@gmail.com  
+(or your Twitter handle)
+""")
 
     
     with tab1:
