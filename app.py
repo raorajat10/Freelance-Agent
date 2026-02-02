@@ -9,6 +9,16 @@ import sys
 
 # Add the project root to Python path for imports
 sys.path.insert(0, os.path.dirname(__file__))
+st.markdown(
+    """
+    <style>
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    .block-container { padding-top: 1rem; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 from src.agents.website_inspector import WebsiteInspector
 from src.agents.website_classifier import WebsiteClassifier
