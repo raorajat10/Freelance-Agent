@@ -1,7 +1,14 @@
 from openai import OpenAI
-from src.models.schemas import LeadInput, ClassificationResult
+from src.models.schemas import LeadInput, ClassificationResult, ScoringResult
 from config.settings import OPENAI_API_KEY, LLM_MODEL, LLM_BASE_URL
 from config.prompts import OUTREACH_SYSTEM_PROMPT, OUTREACH_USER_PROMPT_TEMPLATE
+
+OUTREACH_RELEVANT_ISSUES = {
+    "Missing HTTPS",
+    "Not mobile-friendly",
+    "No clear call-to-action",
+    "No website found"
+}
 
 
 class OutreachGenerator:
@@ -31,7 +38,7 @@ class OutreachGenerator:
             base_url=self.base_url
         )
     
-    def generate(self, lead: LeadInput, classification: ClassificationResult) -> str:
+    def generate(self, lead: LeadInput, classification: ClassificationResult, scoring: ScoringResult) -> str:
         """
         Generate outreach message
         
@@ -43,7 +50,13 @@ class OutreachGenerator:
             Outreach message string (max 3 sentences)
         """
         # Format issues for the prompt
-        issues_text = ", ".join(classification.issues) if classification.issues else "No specific issues"
+        filtered_issues = [
+            issue for issue in classification.issues
+            if issue in OUTREACH_RELEVANT_ISSUES
+]
+
+        issues_text = (", ".join(filtered_issues) if filtered_issues else "No major issues detected")
+
         
         # Build the user prompt with ONLY verified facts
         user_prompt = OUTREACH_USER_PROMPT_TEMPLATE.format(
@@ -52,7 +65,8 @@ class OutreachGenerator:
             city=lead.city,
             state=lead.state,
             website_status=classification.website_status.value,
-            issues=issues_text
+            issues=issues_text,
+            lead_priority=scoring.priority.value
         )
         
         try:
@@ -62,7 +76,7 @@ class OutreachGenerator:
                     {"role": "system", "content": OUTREACH_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.7,
+                temperature=0.4,
                 max_tokens=200
             )
             

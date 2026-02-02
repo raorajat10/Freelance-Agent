@@ -22,5 +22,6 @@ City: {city}
 State: {state}
 Website Status: {website_status}
 Specific Issues: {issues}
+Lead priority: {lead_priority}
 
 Generate the outreach message now."""
