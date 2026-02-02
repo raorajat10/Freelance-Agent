@@ -366,10 +366,10 @@ def main_app():
 
     
     # Main content
-    st.markdown("""🎯
+    st.markdown("""
         <h1 style='text-align: center; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-             Lead Qualifier Pro
+            🎯 Lead Qualifier Pro
         </h1>
     """, unsafe_allow_html=True)
     
