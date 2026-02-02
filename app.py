@@ -380,10 +380,10 @@ def main_app():
     """, unsafe_allow_html=True)
     
     #tabs
-    tab0 ,tab1, tab2, tab3, tab4 = st.tabs(
-    ["📤 Upload Leads", "🔍 Single Lead Search", "📊 Results", "💳 Credits"]
+    tab1 ,tab2, tab3, tab4, tab5 = st.tabs(
+    ["🏠 Home","📤 Upload Leads", "🔍 Single Lead Search", "📊 Results", "💳 Credits"]
 )
-    with tab0:
+    with tab1:
      st.markdown("""
           <h2>Qualify Business Leads in Seconds</h2>
 
@@ -420,16 +420,16 @@ def main_app():
 """)
 
     
-    with tab1:
+    with tab2:
         upload_section(user_email)
     
-    with tab2:
+    with tab3:
         single_lead_search(user_email)
 
-    with tab3:
+    with tab4:
         results_section()
     
-    with tab4:
+    with tab5:
         credits_section(user_email)
 
 
