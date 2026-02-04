@@ -94,6 +94,22 @@ ul[role="listbox"] span {
 div[data-baseweb="popover"] {
     color: var(--comic-ink) !important;
 }
+div[data-baseweb="popover"] * {
+    color: var(--comic-ink) !important;
+}
+div[data-baseweb="popover"],
+div[data-baseweb="menu"],
+ul[role="listbox"] {
+    background: #fff !important;
+    border: 3px solid var(--comic-ink) !important;
+    box-shadow: var(--comic-shadow-soft) !important;
+}
+ul[role="listbox"] li {
+    background: #fff !important;
+}
+ul[role="listbox"] li:hover {
+    background: #fef3c7 !important;
+}
 
 /* Buttons */
 div.stButton > button {
