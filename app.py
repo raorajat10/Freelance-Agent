@@ -93,6 +93,9 @@ div[data-testid="stSelectbox"] input {
 div[data-testid="stSelectbox"] [data-testid="stMarkdownContainer"] {
     color: #111 !important;
 }
+div[data-testid="stSelectbox"] div[role="combobox"] {
+    background: #fff !important;
+}
 div[data-baseweb="popover"],
 div[data-baseweb="menu"],
 ul[role="listbox"] {
@@ -111,7 +114,18 @@ div[role="option"] {
 div[role="option"]:hover,
 div[role="option"][aria-selected="true"] {
     background: #fef3c7 !important;
-    color: white !important;
+    color: #111 !important;
+}
+div[role="option"] * {
+    color: #111 !important;
+}
+div[role="option"][aria-selected="true"] * {
+    color: #111 !important;
+}
+div[data-baseweb="listbox"],
+div[data-baseweb="listbox"] * {
+    background: #fff !important;
+    color: #111 !important;
 }
 
 /* Expander chevron text issue */
@@ -120,11 +134,16 @@ div[data-testid="stExpander"] summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    list-style: none !important;
 }
 
 /* Hide Streamlit default arrow completely */
 div[data-testid="stExpander"] summary svg,
-div[data-testid="stExpander"] summary [data-testid="stIcon"] {
+div[data-testid="stExpander"] summary [data-testid="stIcon"],
+div[data-testid="stExpander"] summary .material-icons {
+    display: none !important;
+}
+div[data-testid="stExpander"] summary::-webkit-details-marker {
     display: none !important;
 }
 
