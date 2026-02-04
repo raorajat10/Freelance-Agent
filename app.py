@@ -39,7 +39,6 @@ COMIC_THEME_CSS = """
 
 /* Keep the header visible so the sidebar toggle works (especially on mobile). */
 header[data-testid="stHeader"] { background: transparent; border-bottom: none; }
-div[data-testid="stToolbar"] { visibility: hidden; height: 0px; }
 #MainMenu { visibility: hidden; }
 footer {visibility: hidden;}
 .block-container { padding-top: 1.25rem; padding-bottom: 2.5rem; }
