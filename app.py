@@ -115,18 +115,28 @@ div[role="option"][aria-selected="true"] {
 }
 
 /* Expander chevron text issue */
+/* CLEAN expander header */
+div[data-testid="stExpander"] summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Hide Streamlit default arrow completely */
 div[data-testid="stExpander"] summary svg,
-div[data-testid="stExpander"] summary [data-testid="stIcon"],
-div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] svg {
+div[data-testid="stExpander"] summary [data-testid="stIcon"] {
     display: none !important;
 }
+
+/* Add our own arrow */
 div[data-testid="stExpander"] summary::after {
     content: "▾";
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 900;
     color: var(--comic-ink);
     margin-left: auto;
 }
+
 
 /* Buttons */
 div.stButton > button {
@@ -286,6 +296,36 @@ pre code { color: #f8fafc !important; }
     border-bottom: 3px solid var(--comic-ink);
     transform: rotate(45deg);
 }
+/* FORCE readable text in inputs + dropdowns */
+div[data-testid="stTextInput"] input,
+div[data-testid="stNumberInput"] input,
+div[data-testid="stSelectbox"] input,
+div[data-testid="stSelectbox"] span,
+div[data-testid="stSelectbox"] div[role="combobox"],
+div[data-testid="stSelectbox"] div[role="combobox"] * {
+    color: #111 !important;
+}
+
+/* Dropdown menu (BaseWeb) */
+div[data-baseweb="popover"],
+div[data-baseweb="menu"],
+ul[role="listbox"],
+li[role="option"] {
+    background: #fff !important;
+    color: #111 !important;
+}
+
+/* Selected + hover state */
+li[role="option"][aria-selected="true"],
+li[role="option"]:hover {
+    background: #fef3c7 !important;
+    color: #111 !important;
+}
+div[data-testid="stExpander"] summary {
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
 </style>
 """
 
