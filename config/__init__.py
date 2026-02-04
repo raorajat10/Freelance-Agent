@@ -1,0 +1,2 @@
+"""Application configuration (settings, prompts)."""
+

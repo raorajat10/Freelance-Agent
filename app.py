@@ -5,9 +5,12 @@ from io import BytesIO
 import os
 from datetime import datetime
 import sys
+from pathlib import Path
 
 # Add the project root to Python path for imports
-sys.path.insert(0, os.path.dirname(__file__))
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 st.set_page_config(
     page_title="Lead Qualifier Pro - AI Lead Qualification",
