@@ -85,17 +85,13 @@ div[data-testid="stSelectbox"] div[role="combobox"] {
 /* Selectbox text + dropdown options */
 div[data-testid="stSelectbox"] span,
 div[data-testid="stSelectbox"] div[role="combobox"] * {
-    color: var(--comic-ink) !important;
+    color: #111 !important;
 }
-ul[role="listbox"] li,
-ul[role="listbox"] span {
-    color: var(--comic-ink) !important;
+div[data-testid="stSelectbox"] input {
+    color: #111 !important;
 }
-div[data-baseweb="popover"] {
-    color: var(--comic-ink) !important;
-}
-div[data-baseweb="popover"] * {
-    color: var(--comic-ink) !important;
+div[data-testid="stSelectbox"] [data-testid="stMarkdownContainer"] {
+    color: #111 !important;
 }
 div[data-baseweb="popover"],
 div[data-baseweb="menu"],
@@ -103,12 +99,33 @@ ul[role="listbox"] {
     background: #fff !important;
     border: 3px solid var(--comic-ink) !important;
     box-shadow: var(--comic-shadow-soft) !important;
+    color: #111 !important;
 }
-ul[role="listbox"] li {
+ul[role="listbox"] * {
+    color: #111 !important;
+}
+div[role="option"] {
     background: #fff !important;
+    color: #111 !important;
 }
-ul[role="listbox"] li:hover {
+div[role="option"]:hover,
+div[role="option"][aria-selected="true"] {
     background: #fef3c7 !important;
+    color: #111 !important;
+}
+
+/* Expander chevron text issue */
+div[data-testid="stExpander"] summary svg,
+div[data-testid="stExpander"] summary [data-testid="stIcon"],
+div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] svg {
+    display: none !important;
+}
+div[data-testid="stExpander"] summary::after {
+    content: "▾";
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--comic-ink);
+    margin-left: auto;
 }
 
 /* Buttons */
