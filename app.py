@@ -4,27 +4,10 @@ import json
 from io import BytesIO
 import os
 from datetime import datetime
-import hashlib
 import sys
 
 # Add the project root to Python path for imports
 sys.path.insert(0, os.path.dirname(__file__))
-st.markdown(
-    """
-    <style>
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .block-container { padding-top: 1rem; }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-from src.agents.website_inspector import WebsiteInspector
-from src.agents.website_classifier import WebsiteClassifier
-from src.agents.lead_scorer import LeadScorer
-from src.agents.outreach_generator import OutreachGenerator
-from src.models.schemas import LeadInput, LeadOutput
 
 st.set_page_config(
     page_title="Lead Qualifier Pro - AI Lead Qualification",
@@ -33,11 +16,242 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+COMIC_THEME_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap');
+
+:root {
+    --comic-bg: #fff7d6;
+    --comic-panel: #ffffff;
+    --comic-ink: #141414;
+    --comic-muted: rgba(20, 20, 20, 0.7);
+    --comic-primary: #ff3d00;
+    --comic-secondary: #2563eb;
+    --comic-accent: #fbbf24;
+    --comic-success: #16a34a;
+    --comic-danger: #dc2626;
+    --comic-radius: 18px;
+    --comic-shadow: 7px 7px 0 rgba(0,0,0,0.92);
+    --comic-shadow-soft: 5px 5px 0 rgba(0,0,0,0.55);
+    --comic-font-title: "Bangers", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --comic-font-body: "Comic Neue", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+header {visibility: hidden;}
+footer {visibility: hidden;}
+.block-container { padding-top: 1.25rem; padding-bottom: 2.5rem; }
+
+html, body, [class*="css"] { font-family: var(--comic-font-body); }
+.stApp {
+    background: var(--comic-bg);
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(0,0,0,0.08) 1px, transparent 0);
+    background-size: 16px 16px;
+}
+
+h1, h2, h3, h4, h5 {
+    font-family: var(--comic-font-title) !important;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--comic-ink);
+}
+
+p, li, span, label, div { color: var(--comic-ink); }
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #fff 0%, #fff7f0 100%);
+    border-right: 3px solid var(--comic-ink);
+}
+section[data-testid="stSidebar"] * { font-family: var(--comic-font-body); }
+
+/* Inputs */
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stNumberInput"] input,
+div[data-testid="stSelectbox"] div[role="combobox"] {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: 14px !important;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.55) !important;
+}
+
+/* Buttons */
+div.stButton > button {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: 999px !important;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.85) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+    transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+div.stButton > button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.92) !important;
+    filter: brightness(1.02);
+}
+div.stButton > button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.85) !important;
+}
+
+/* Tabs */
+div[data-testid="stTabs"] button {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: 999px !important;
+    margin-right: 8px !important;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.45) !important;
+    background: #fff !important;
+}
+div[data-testid="stTabs"] button[aria-selected="true"] {
+    background: var(--comic-accent) !important;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.75) !important;
+}
+
+/* Expanders */
+div[data-testid="stExpander"] details {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: var(--comic-radius) !important;
+    box-shadow: var(--comic-shadow-soft) !important;
+    background: #fff !important;
+}
+
+/* Dataframes */
+div[data-testid="stDataFrame"] {
+    border: 3px solid var(--comic-ink);
+    border-radius: var(--comic-radius);
+    box-shadow: var(--comic-shadow-soft);
+    overflow: hidden;
+}
+
+/* Alerts (st.info/success/warning/error) */
+div[data-testid="stAlert"] {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: var(--comic-radius) !important;
+    box-shadow: var(--comic-shadow-soft) !important;
+}
+
+/* Metrics */
+div[data-testid="stMetric"] {
+    border: 3px solid var(--comic-ink);
+    border-radius: var(--comic-radius);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.45);
+    background: #fff;
+    padding: 0.85rem 0.85rem;
+}
+
+/* Code blocks */
+pre {
+    border: 3px solid var(--comic-ink) !important;
+    border-radius: var(--comic-radius) !important;
+    box-shadow: var(--comic-shadow-soft) !important;
+}
+
+/* Custom building blocks */
+.comic-hero {
+    background: linear-gradient(135deg, #fff 0%, #fff3bf 100%);
+    border: 4px solid var(--comic-ink);
+    border-radius: calc(var(--comic-radius) + 6px);
+    box-shadow: var(--comic-shadow);
+    padding: 1.5rem 1.6rem;
+    position: relative;
+    overflow: hidden;
+}
+.comic-hero:before {
+    content: "";
+    position: absolute;
+    inset: -40px;
+    background:
+        radial-gradient(circle at 8px 8px, rgba(0,0,0,0.09) 2px, transparent 0);
+    background-size: 22px 22px;
+    transform: rotate(-6deg);
+    opacity: 0.55;
+    pointer-events: none;
+}
+.comic-hero > * { position: relative; }
+.comic-kicker {
+    display: inline-block;
+    padding: 6px 12px;
+    background: var(--comic-primary);
+    color: #fff !important;
+    border: 3px solid var(--comic-ink);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.85);
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+.comic-subtitle {
+    font-size: 1.1rem;
+    color: var(--comic-muted);
+    margin-top: 0.4rem;
+}
+.comic-panel {
+    background: var(--comic-panel);
+    border: 3px solid var(--comic-ink);
+    border-radius: var(--comic-radius);
+    box-shadow: var(--comic-shadow-soft);
+    padding: 1.15rem 1.15rem;
+}
+.comic-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 2px solid var(--comic-ink);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+    font-weight: 700;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+.comic-badge--alt { background: #e0f2fe; }
+.comic-badge--good { background: #dcfce7; }
+.comic-badge--warn { background: #fef9c3; }
+.comic-badge--bad { background: #fee2e2; }
+.comic-micro {
+    font-size: 0.92rem;
+    color: var(--comic-muted);
+}
+.comic-speech {
+    background: #fff;
+    border: 3px solid var(--comic-ink);
+    border-radius: 16px;
+    box-shadow: var(--comic-shadow-soft);
+    padding: 0.9rem 1rem;
+    position: relative;
+}
+.comic-speech:after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    bottom: -12px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-right: 3px solid var(--comic-ink);
+    border-bottom: 3px solid var(--comic-ink);
+    transform: rotate(45deg);
+}
+</style>
+"""
+
+st.markdown(COMIC_THEME_CSS, unsafe_allow_html=True)
+
+from src.agents.website_inspector import WebsiteInspector
+from src.agents.website_classifier import WebsiteClassifier
+from src.agents.lead_scorer import LeadScorer
+from src.agents.outreach_generator import OutreachGenerator
+from src.models.schemas import LeadInput, LeadOutput
+
 RESULTS_DIR = "data/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # API Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "") or st.secrets.get("OPENAI_API_KEY", "")
+_openai_secret = st.secrets.get("OPENAI_API_KEY", "")
+if not _openai_secret:
+    try:
+        _openai_secret = st.secrets.get("auth", {}).get("OPENAI_API_KEY", "")
+    except Exception:
+        _openai_secret = ""
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "") or _openai_secret
 
 # Payment Configuration
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
@@ -45,13 +259,85 @@ STRIPE_KEY = os.getenv("STRIPE_KEY", "")
 
 USER_DB_FILE = "users.json"
 
+DEFAULT_PERSONA = "Web Developer"
+DEFAULT_CURRENCY_SYMBOL = "$"
+PERSONA_PRESETS = {
+    "Web Developer": {
+        "service_label": "web design & web development",
+        "offer_line": "Professional websites",
+        "starting_price": 199,
+    },
+    "Sales / SDR Freelancer": {
+        "service_label": "sales outreach",
+        "offer_line": "Outbound outreach packages",
+        "starting_price": 199,
+    },
+    "Copywriter / Editor": {
+        "service_label": "copywriting and editing",
+        "offer_line": "Content writing and editing",
+        "starting_price": 199,
+    },
+    "Video Editor": {
+        "service_label": "video editing",
+        "offer_line": "Video editing packages",
+        "starting_price": 199,
+    },
+    "Graphic Designer": {
+        "service_label": "graphic design",
+        "offer_line": "Design packages",
+        "starting_price": 199,
+    },
+    "SEO Consultant": {
+        "service_label": "SEO optimization",
+        "offer_line": "SEO audits",
+        "starting_price": 199,
+    },
+    "Virtual Assistant": {
+        "service_label": "virtual assistant support",
+        "offer_line": "VA support packages",
+        "starting_price": 199,
+    },
+    "Custom": {
+        "service_label": "",
+        "offer_line": "",
+        "starting_price": 199,
+    },
+}
+
+
+def _format_price_anchor(currency_symbol: str, starting_price) -> str:
+    symbol = (currency_symbol or DEFAULT_CURRENCY_SYMBOL).strip() or DEFAULT_CURRENCY_SYMBOL
+    try:
+        price_int = int(starting_price)
+        return f"{symbol}{price_int}"
+    except Exception:
+        return f"{symbol}{starting_price}"
+
+
+def get_offer_config() -> dict:
+    persona = st.session_state.get("persona", DEFAULT_PERSONA) or DEFAULT_PERSONA
+    service_label = st.session_state.get("offer_service_label", "") or ""
+    offer_line = st.session_state.get("offer_offer_line", "") or ""
+    currency_symbol = st.session_state.get("offer_currency_symbol", DEFAULT_CURRENCY_SYMBOL) or DEFAULT_CURRENCY_SYMBOL
+    starting_price = st.session_state.get("offer_starting_price", PERSONA_PRESETS[DEFAULT_PERSONA]["starting_price"])
+
+    return {
+        "persona": persona,
+        "service_label": service_label,
+        "offer_line": offer_line,
+        "starting_price": starting_price,
+        "currency_symbol": currency_symbol,
+        "price_anchor": _format_price_anchor(currency_symbol, starting_price),
+    }
+
 
 class LeadQualificationPipeline:
-    def __init__(self, OPENAI_API_KEY: str):
+    def __init__(self, OPENAI_API_KEY: str, offer: dict = None):
         self.inspector = WebsiteInspector()
         self.classifier = WebsiteClassifier()
         self.scorer = LeadScorer()
         self.outreach_gen = OutreachGenerator(api_key=OPENAI_API_KEY)
+        self.offer = offer or {}
     
     def process_lead(self, lead: LeadInput) -> LeadOutput:
         inspection = self.inspector.inspect(lead.website_url)
@@ -59,7 +345,7 @@ class LeadQualificationPipeline:
         scoring = self.scorer.score(lead, classification)
         
         if scoring.priority.value in ['HIGH', 'MEDIUM']:
-            outreach = self.outreach_gen.generate(lead, classification, scoring)
+            outreach = self.outreach_gen.generate(lead, classification, scoring, offer=self.offer)
         else:
             outreach = "Low priority - no outreach generated"
         
@@ -141,6 +427,7 @@ def save_users(users):
 def get_or_create_user(email: str, name: str = None):
     """Get existing user or create new one"""
     users = load_users()
+    default_preset = PERSONA_PRESETS[DEFAULT_PERSONA]
     
     if email not in users:
         users[email] = {
@@ -149,9 +436,36 @@ def get_or_create_user(email: str, name: str = None):
             'credits': 10,  # Free trial credits
             'total_processed': 0,
             'created_at': datetime.now().isoformat(),
-            'subscription': 'free'
+            'subscription': 'free',
+            # Persona & offer (used to tailor outreach)
+            "persona": DEFAULT_PERSONA,
+            "service_label": default_preset["service_label"],
+            "offer_line": default_preset["offer_line"],
+            "starting_price": default_preset["starting_price"],
+            "currency_symbol": DEFAULT_CURRENCY_SYMBOL,
         }
         save_users(users)
+    else:
+        # Backfill new keys for existing users without changing auth/credits behavior
+        changed = False
+        user = users[email]
+        if "persona" not in user:
+            user["persona"] = DEFAULT_PERSONA
+            changed = True
+        if "service_label" not in user:
+            user["service_label"] = default_preset["service_label"]
+            changed = True
+        if "offer_line" not in user:
+            user["offer_line"] = default_preset["offer_line"]
+            changed = True
+        if "starting_price" not in user:
+            user["starting_price"] = default_preset["starting_price"]
+            changed = True
+        if "currency_symbol" not in user:
+            user["currency_symbol"] = DEFAULT_CURRENCY_SYMBOL
+            changed = True
+        if changed:
+            save_users(users)
     
     return users[email]
 
@@ -162,6 +476,20 @@ def init_session_state():
         st.session_state.results = []
     if 'credits' not in st.session_state:
         st.session_state.credits = 0
+    if "persona" not in st.session_state:
+        st.session_state.persona = DEFAULT_PERSONA
+    if "offer_service_label" not in st.session_state:
+        st.session_state.offer_service_label = PERSONA_PRESETS[DEFAULT_PERSONA]["service_label"]
+    if "offer_offer_line" not in st.session_state:
+        st.session_state.offer_offer_line = PERSONA_PRESETS[DEFAULT_PERSONA]["offer_line"]
+    if "offer_starting_price" not in st.session_state:
+        st.session_state.offer_starting_price = PERSONA_PRESETS[DEFAULT_PERSONA]["starting_price"]
+    if "offer_currency_symbol" not in st.session_state:
+        st.session_state.offer_currency_symbol = DEFAULT_CURRENCY_SYMBOL
+    if "offer_loaded_for" not in st.session_state:
+        st.session_state.offer_loaded_for = None
+    if "persona_last" not in st.session_state:
+        st.session_state.persona_last = None
 
 
 def calculate_priority_metrics(results):
@@ -186,38 +514,135 @@ def convert_df_to_excel(df):
 
 
 def login_page():
-    st.markdown("""
-        <div style='text-align: center; padding: 3rem 0;'>
-            <h1>🎯 Lead Qualifier Pro</h1>
-            <p>AI-Powered Lead Qualification</p>
+    st.markdown(
+        """
+        <div class="comic-hero">
+            <span class="comic-kicker">Lead Qualification SaaS</span>
+            <h1 style="margin-top: 0.75rem; margin-bottom: 0.25rem;">Lead Qualifier Pro</h1>
+            <p class="comic-subtitle">
+                Qualify leads, generate outreach, and focus on the work worth your time — with a comic-book vibe.
+            </p>
+            <div style="margin-top: 0.8rem;">
+                <span class="comic-badge comic-badge--alt">Web Developers</span>
+                <span class="comic-badge comic-badge--alt">Sales Freelancers</span>
+                <span class="comic-badge comic-badge--alt">Editors</span>
+                <span class="comic-badge comic-badge--alt">Designers</span>
+                <span class="comic-badge comic-badge--alt">Agencies</span>
+            </div>
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    st.info("Sign in with Google to continue")
+    col1, col2 = st.columns([1.35, 0.85], gap="large")
 
-    if st.button("🔐 Sign in with Google", type="primary", width="stretch"):
-        try:
-            st.login()
-        except Exception as e:
-            st.error(f"Authentication error: {str(e)}")
-            st.info("""
-            **For Streamlit Cloud deployment:**
-            
-            Update your `.streamlit/secrets.toml` with your app URL:
-            
-            ```toml
-            [auth]
-            redirect_uri = "https://your-app-name.streamlit.app/oauth2callback"
-            cookie_secret = "your-secret"
-            client_id = "your-google-client-id"
-            client_secret = "your-google-client-secret"
-            server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
-            ```
-            
-            Also update your Google OAuth redirect URI to match your Streamlit Cloud URL.
-            """)
+    with col1:
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">What you get</h3>
+                <ul style="margin-bottom: 0.5rem;">
+                    <li><b>Lead scoring</b> that highlights who to contact first</li>
+                    <li><b>Website signals</b> (reachability, mobile, HTTPS, CTA)</li>
+                    <li><b>AI outreach drafts</b> that stay short and factual</li>
+                    <li><b>CSV upload + exports</b> (Excel / CSV / JSON)</li>
+                </ul>
+                <div class="comic-speech" style="margin-top: 0.9rem;">
+                    Turn a messy list into a clear hit‑list in minutes.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Built for modern freelancers</h3>
+                <div style="margin-bottom: 0.3rem;">
+                    <span class="comic-badge comic-badge--good">Web Design / Dev</span>
+                    <span class="comic-badge comic-badge--good">Copywriter / Editor</span>
+                    <span class="comic-badge comic-badge--good">Video Editor</span>
+                    <span class="comic-badge comic-badge--good">Sales / SDR</span>
+                    <span class="comic-badge comic-badge--good">SEO Consultant</span>
+                    <span class="comic-badge comic-badge--good">Virtual Assistant</span>
+                </div>
+                <p class="comic-micro" style="margin-bottom: 0;">
+                    After you sign in, pick a persona and offer so outreach matches your freelancing work.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col2:
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Sign in</h3>
+                <p class="comic-micro" style="margin-top: 0;">
+                    Use Google to keep your workspace private and your credits tied to your account.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button("Sign in with Google", type="primary", width="stretch"):
+            try:
+                st.login()
+            except Exception as e:
+                st.error(f"Authentication error: {str(e)}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Pricing (credits)</h3>
+                <p class="comic-micro" style="margin-top: 0; margin-bottom: 0.8rem;">
+                    Each qualified lead uses 1 credit.
+                </p>
+                <div>
+                    <span class="comic-badge comic-badge--warn">Starter: 50 credits</span>
+                    <span class="comic-badge comic-badge--warn">Professional: 200 credits</span>
+                    <span class="comic-badge comic-badge--warn">Enterprise: 1000 credits</span>
+                </div>
+                <p class="comic-micro" style="margin-bottom: 0;">
+                    Payments can be wired in when you’re ready.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.expander("Deployment notes (Streamlit Cloud)", expanded=False):
+            st.markdown(
+                """
+                In Streamlit Cloud, go to **App settings → Secrets** and paste:
+
+                ```toml
+                # App keys (top-level)
+                OPENAI_API_KEY = "sk-your-openai-key"
+                # Optional:
+                # LLM_MODEL = "gpt-4o-mini"
+
+                [auth]
+                redirect_uri = "https://your-app-name.streamlit.app/oauth2callback"
+                cookie_secret = "your-secret"
+                client_id = "your-google-client-id"
+                client_secret = "your-google-client-secret"
+                server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
+                ```
+
+                Also update your **Google OAuth** Authorized redirect URI to match:
+                `https://your-app-name.streamlit.app/oauth2callback`
+                """
+            )
 
 def show_single_result(result: LeadOutput):
     st.markdown("---")
@@ -244,12 +669,17 @@ def show_single_result(result: LeadOutput):
 
 def process_single_lead(user_email: str, lead_data: dict):
     users = load_users()
-            # ✅ Inject safe defaults if missing
-    lead_data.setdefault("category", "Unknown")
-    lead_data.setdefault("city", "Unknown")
-    lead_data.setdefault("state", "Unknown")
+    # ✅ Inject safe defaults if missing
+    if not lead_data.get("category"):
+        lead_data["category"] = "Unknown"
+    if not lead_data.get("city"):
+        lead_data["city"] = "Unknown"
+    if not lead_data.get("state"):
+        lead_data["state"] = "Unknown"
+    if not lead_data.get("email"):
+        lead_data["email"] = lead_data.get("contact_email", "") or ""
     try:
-        pipeline = LeadQualificationPipeline(OPENAI_API_KEY)
+        pipeline = LeadQualificationPipeline(OPENAI_API_KEY, offer=get_offer_config())
         lead = LeadInput(**lead_data)
         with st.spinner("⚡ Analyzing website & scoring lead..."):
             result = pipeline.process_lead(lead)
@@ -279,22 +709,34 @@ def process_single_lead(user_email: str, lead_data: dict):
 
 
 def single_lead_search(user_email):
-    st.markdown("### 🔍 Single Lead Search")
-    st.caption("Search and qualify one lead using **1 credit**")
+    st.markdown(
+        """
+        <div class="comic-panel">
+            <h2 style="margin-top: 0;">Single lead</h2>
+            <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                Qualify one business using <b>1 credit</b>. Add category/city/state for stronger outreach.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
 
     users = load_users()
     user = users[user_email]
 
     with st.form("single_lead_form"):
-        business_name = st.text_input("Business Name*", placeholder="Acme Corp")
-        website_url = st.text_input(
-            "Website URL*",
-            placeholder="https://acme.com"
-        )
-        contact_name = st.text_input("Contact Name (optional)")
-        contact_email = st.text_input("Contact Email (optional)")
+        col1, col2 = st.columns(2)
+        with col1:
+            business_name = st.text_input("Business name*", placeholder="Acme Plumbing")
+            website_url = st.text_input("Website URL*", placeholder="https://acme.com")
+            category = st.text_input("Category (recommended)", placeholder="Plumbing")
+        with col2:
+            city = st.text_input("City (recommended)", placeholder="Austin")
+            state = st.text_input("State (recommended)", placeholder="TX")
+            email = st.text_input("Email (optional)", placeholder="owner@acme.com")
 
-        submitted = st.form_submit_button("🚀 Qualify Lead")
+        submitted = st.form_submit_button("Qualify lead")
 
     if submitted:
         if not business_name or not website_url:
@@ -311,8 +753,10 @@ def single_lead_search(user_email):
             lead_data={
                 "business_name": business_name,
                 "website_url": website_url,
-                "contact_name": contact_name,
-                "contact_email": contact_email,
+                "category": category,
+                "city": city,
+                "state": state,
+                "email": email,
             }
         )
 
@@ -326,6 +770,22 @@ def main_app():
     user_data = get_or_create_user(user_email, user_name)
     st.session_state.credits = user_data['credits']
     
+    # Load persona/offer settings once per logged-in user
+    if st.session_state.offer_loaded_for != user_email:
+        st.session_state.persona = user_data.get("persona", DEFAULT_PERSONA)
+        st.session_state.offer_service_label = user_data.get(
+            "service_label", PERSONA_PRESETS[DEFAULT_PERSONA]["service_label"]
+        )
+        st.session_state.offer_offer_line = user_data.get(
+            "offer_line", PERSONA_PRESETS[DEFAULT_PERSONA]["offer_line"]
+        )
+        st.session_state.offer_starting_price = user_data.get(
+            "starting_price", PERSONA_PRESETS[DEFAULT_PERSONA]["starting_price"]
+        )
+        st.session_state.offer_currency_symbol = user_data.get("currency_symbol", DEFAULT_CURRENCY_SYMBOL)
+        st.session_state.offer_loaded_for = user_email
+        st.session_state.persona_last = st.session_state.persona
+    
     # Load previous results
     previous_results = load_results(user_email)
     if previous_results and not st.session_state.results:
@@ -333,23 +793,32 @@ def main_app():
     
     # Sidebar
     with st.sidebar:
-        st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                       padding: 1.5rem; border-radius: 0.5rem; text-align: center; color: white;'>
-                <h3 style='margin: 0;'>👤 {user_name}</h3>
-                <p style='margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;'>{user_email}</p>
+        st.markdown(
+            f"""
+            <div class="comic-panel">
+                <span class="comic-kicker" style="background: var(--comic-secondary);">Workspace</span>
+                <h3 style="margin: 0.8rem 0 0 0;">{user_name}</h3>
+                <p class="comic-micro" style="margin: 0.2rem 0 0 0;">{user_email}</p>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Credits display
-        st.markdown(f"""
-            <div style='background: #f0f2f6; padding: 1rem; border-radius: 0.5rem; text-align: center;'>
-                <h2 style='color: #667eea; margin: 0;'>{st.session_state.credits}</h2>
-                <p style='color: #666; margin: 0.5rem 0 0 0;'>Credits Available</p>
+        st.markdown(
+            f"""
+            <div class="comic-panel" style="text-align: center;">
+                <span class="comic-kicker" style="background: var(--comic-primary);">Credits</span>
+                <div style="font-family: var(--comic-font-title); font-size: 3rem; margin-top: 0.7rem;">
+                    {st.session_state.credits}
+                </div>
+                <div class="comic-micro" style="margin-top: 0.15rem;">available</div>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -357,14 +826,65 @@ def main_app():
         users = load_users()
         user_info = users.get(user_email, {})
         
-        st.markdown("### 📊 Your Stats")
-        st.metric("Total Processed", user_info.get('total_processed', 0))
-        st.metric("Subscription", user_info.get('subscription', 'free').upper())
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Stats</h3>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("Processed", user_info.get("total_processed", 0))
+        with col_b:
+            st.metric("Plan", user_info.get("subscription", "free").upper())
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Persona & offer</h3>
+                <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                    Tailor outreach to your freelancing service.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        persona_options = list(PERSONA_PRESETS.keys())
+        persona = st.selectbox("Persona", persona_options, key="persona")
+        if persona != st.session_state.persona_last:
+            st.session_state.persona_last = persona
+            preset = PERSONA_PRESETS.get(persona, PERSONA_PRESETS[DEFAULT_PERSONA])
+            if persona != "Custom":
+                st.session_state.offer_service_label = preset["service_label"]
+                st.session_state.offer_offer_line = preset["offer_line"]
+                st.session_state.offer_starting_price = preset["starting_price"]
+
+        st.number_input("Starting price", min_value=0, step=1, key="offer_starting_price")
+        with st.expander("Customize wording", expanded=False):
+            st.text_input("Service label", key="offer_service_label", placeholder="e.g., web development")
+            st.text_input("Offer line", key="offer_offer_line", placeholder="e.g., Professional websites")
+            st.text_input("Currency symbol", key="offer_currency_symbol", max_chars=3)
+
+        if st.button("Save persona & offer", width="stretch"):
+            users = load_users()
+            if user_email in users:
+                users[user_email]["persona"] = st.session_state.persona
+                users[user_email]["service_label"] = st.session_state.offer_service_label
+                users[user_email]["offer_line"] = st.session_state.offer_offer_line
+                users[user_email]["starting_price"] = st.session_state.offer_starting_price
+                users[user_email]["currency_symbol"] = st.session_state.offer_currency_symbol
+                save_users(users)
+                st.success("Saved.")
         
         st.markdown("---")
         
         # Logout button
-        if st.button("🚪 Logout", width="stretch"):
+        if st.button("Logout", width="stretch"):
             try:
                 st.logout()
             except:
@@ -376,58 +896,122 @@ def main_app():
 
     
     # Main content
-    st.markdown("""
-        <h1 style='text-align: center; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            🎯 Lead Qualifier Pro
-        </h1>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-        <p style='text-align: center; color: #666; font-size: 1.1rem; margin-bottom: 2rem;'>
-            Upload your leads, and we'll analyze their websites to help you prioritize outreach
-        </p>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="comic-hero">
+            <span class="comic-kicker" style="background: var(--comic-secondary);">Dashboard</span>
+            <h1 style="margin-top: 0.75rem; margin-bottom: 0.25rem;">Lead Qualifier Pro</h1>
+            <p class="comic-subtitle">
+                Upload leads, scan websites, and generate outreach drafts — then export and start contacting.
+            </p>
+            <div style="margin-top: 0.85rem;">
+                <span class="comic-badge comic-badge--good">{st.session_state.credits} credits</span>
+                <span class="comic-badge comic-badge--alt">{len(st.session_state.results)} saved results</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
     
     #tabs
     tab1 ,tab2, tab3, tab4, tab5 = st.tabs(
-    ["🏠 Home","📤 Upload Leads", "🔍 Single Lead Search", "📊 Results", "💳 Credits"]
-)
+    ["Home", "Upload Leads", "Single Lead", "Results", "Credits"]
+ )
     with tab1:
-     st.markdown("""
-          <h2>Qualify Business Leads in Seconds</h2>
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h2 style="margin-top: 0;">Qualify business leads in minutes</h2>
+                <p class="comic-micro" style="margin-top: 0;">
+                    This app turns a lead list into a prioritized queue with clear reasons and ready-to-send outreach drafts.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-          <p>
-          Lead Qualifier Pro helps you decide <b>which leads are worth your time</b>.
-          We analyze a business’s website and give you:
-            </p>
+        st.markdown("<br>", unsafe_allow_html=True)
 
-          <ul>
-           <li>Lead score & priority</li>
-           <li>Website weaknesses</li>
-           <li>Suggested outreach (for good leads)</li>
-          </ul>
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.markdown(
+                """
+                <div class="comic-panel">
+                    <h3 style="margin-top: 0;">1) Upload</h3>
+                    <p class="comic-micro" style="margin-top: 0;">
+                        Drop in a CSV lead list and preview the first rows before processing.
+                    </p>
+                    <span class="comic-badge comic-badge--warn">1 credit / lead</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with col_b:
+            st.markdown(
+                """
+                <div class="comic-panel">
+                    <h3 style="margin-top: 0;">2) Prioritize</h3>
+                    <p class="comic-micro" style="margin-top: 0;">
+                        Get a score, priority tier, and website issues you can reference in outreach.
+                    </p>
+                    <span class="comic-badge comic-badge--good">High-value first</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with col_c:
+            st.markdown(
+                """
+                <div class="comic-panel">
+                    <h3 style="margin-top: 0;">3) Export</h3>
+                    <p class="comic-micro" style="margin-top: 0;">
+                        Download Excel/CSV/JSON and start contacting right away.
+                    </p>
+                    <span class="comic-badge comic-badge--alt">Team-friendly</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-          <hr>
+        st.markdown("<br>", unsafe_allow_html=True)
 
-         <h4>How to start</h4>
-          <ol>
-          <li>Upload a CSV of leads, or</li>
-          <li>Search a single lead manually</li>
-          </ol>
-         """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Works for more than web dev</h3>
+                <p class="comic-micro" style="margin-top: 0;">
+                    Use the same lead qualification workflow across different freelancing services:
+                </p>
+                <div>
+                    <span class="comic-badge comic-badge--alt">Sales outreach</span>
+                    <span class="comic-badge comic-badge--alt">Editors / copywriters</span>
+                    <span class="comic-badge comic-badge--alt">Video editors</span>
+                    <span class="comic-badge comic-badge--alt">Designers</span>
+                    <span class="comic-badge comic-badge--alt">SEO consultants</span>
+                </div>
+                <p class="comic-micro" style="margin-bottom: 0;">
+                    Set your persona and offer in the sidebar (so outreach reflects your service).
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    st.info("⬅️ Use the tabs above to get started")
-    st.markdown("---")
-    st.markdown("""
-             **About**
+        st.markdown("<br>", unsafe_allow_html=True)
 
-              Lead Qualifier Pro is built for freelancers, consultants, and teams who sell to businesses
-               and want to focus on high-quality opportunities.
-
-**Contact:** leadqualifierhelp28@gmail.com  
-**Privacy:** We respect your privacy. Your data is never shared.
-""")
+        st.markdown(
+            """
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Support & privacy</h3>
+                <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                    Your data stays in your workspace. For help, email: leadqualifierhelp28@gmail.com
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     
     with tab2:
@@ -445,36 +1029,56 @@ def main_app():
 
 def upload_section(user_email):
     """Upload and processing section"""
-    st.markdown("### Upload Your Lead List")
+    st.markdown(
+        """
+        <div class="comic-panel">
+            <h2 style="margin-top: 0;">Upload your lead list</h2>
+            <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                Upload a CSV and we’ll qualify each business by website signals, lead score, and priority.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
-    with st.expander("📋 CSV Format Requirements", expanded=False):
-        st.markdown("""
-        Your CSV file should have the following columns:
-        - `business_name` - Company name
-        - `website_url` - Full website URL (including http:// or https://)
-        - `contact_name` - Contact person's name (optional)
-        - `contact_email` - Contact person's email (optional)
-        
-        **Example:**
-        ```
-        business_name,website_url,contact_name,contact_email
-        Acme Corp,https://acme.com,John Doe,john@acme.com
-        Tech Solutions,https://techsolutions.io,Jane Smith,jane@techsolutions.io
-        ```
-        """)
+    with st.expander("CSV format", expanded=False):
+        st.markdown(
+            """
+            **Required**
+            - `business_name`
+            - `website_url` (include `http://` or `https://` when possible)
+
+            **Recommended (improves scoring/outreach)**
+            - `category`
+            - `city`
+            - `state`
+
+            **Optional**
+            - `email` (or `contact_email`)
+
+            **Example**
+            ```
+            business_name,website_url,category,city,state,email
+            Acme Plumbing,https://acme.com,Plumbing,Austin,TX,owner@acme.com
+            Bright Dental,https://brightdental.com,Dentist,Miami,FL,
+            ```
+            """
+        )
         
         # Sample CSV download
         sample_data = {
-            'business_name': ['Acme Corp', 'Tech Solutions', 'Digital Agency'],
-            'website_url': ['https://acme.com', 'https://techsolutions.io', 'https://digitalagency.co'],
-            'contact_name': ['John Doe', 'Jane Smith', 'Bob Johnson'],
-            'contact_email': ['john@acme.com', 'jane@techsolutions.io', 'bob@digitalagency.co']
+            "business_name": ["Acme Plumbing", "Bright Dental", "Sunset Landscaping"],
+            "website_url": ["https://acme.com", "https://brightdental.com", ""],
+            "category": ["Plumbing", "Dentist", "Landscaping"],
+            "city": ["Austin", "Miami", "Dallas"],
+            "state": ["TX", "FL", "TX"],
+            "email": ["owner@acme.com", "", "info@sunset.com"],
         }
         sample_df = pd.DataFrame(sample_data)
         sample_csv = sample_df.to_csv(index=False)
         
         st.download_button(
-            label="📥 Download Sample CSV",
+            label="Download sample CSV",
             data=sample_csv,
             file_name="sample_leads.csv",
             mime="text/csv",
@@ -492,21 +1096,48 @@ def upload_section(user_email):
     if uploaded_file is not None:
         try:
             df = pd.read_csv(uploaded_file)
-            
+            original_columns = set(df.columns)
+             
             # Validate required columns
             required_cols = ['business_name', 'website_url']
             missing_cols = [col for col in required_cols if col not in df.columns]
-            
+             
             if missing_cols:
                 st.error(f"❌ Missing required columns: {', '.join(missing_cols)}")
                 return
-            
-            # Fill optional columns
-            if 'contact_name' not in df.columns:
-                df['contact_name'] = ''
-            if 'contact_email' not in df.columns:
-                df['contact_email'] = ''
-            
+             
+            # Normalize missing values
+            df = df.fillna("")
+
+            # Optional columns (keep CSV flexible)
+            if "category" not in df.columns:
+                df["category"] = "Unknown"
+            if "city" not in df.columns:
+                df["city"] = "Unknown"
+            if "state" not in df.columns:
+                df["state"] = "Unknown"
+            if "contact_name" not in df.columns:
+                df["contact_name"] = ""
+            if "contact_email" not in df.columns:
+                df["contact_email"] = ""
+            if "email" not in df.columns:
+                df["email"] = df["contact_email"] if "contact_email" in df.columns else ""
+
+            # If email is blank but contact_email is present, copy it over
+            df.loc[(df["email"] == "") & (df["contact_email"] != ""), "email"] = df["contact_email"]
+
+            # Normalize blanks for recommended fields
+            for col in ["category", "city", "state"]:
+                df[col] = df[col].astype(str).str.strip()
+                df.loc[df[col] == "", col] = "Unknown"
+
+            missing_recommended = [c for c in ["category", "city", "state"] if c not in original_columns]
+            if missing_recommended:
+                st.warning(
+                    "Recommended columns missing (we’ll still run): "
+                    + ", ".join(missing_recommended)
+                )
+             
             # Preview
             st.success(f"✅ File loaded successfully! Found {len(df)} leads")
             
@@ -545,7 +1176,7 @@ def upload_section(user_email):
 def process_leads(df, user_email, num_leads):
     """Process leads through qualification pipeline"""
     try:
-        pipeline = LeadQualificationPipeline(api_key=OPENAI_API_KEY)
+        pipeline = LeadQualificationPipeline(OPENAI_API_KEY, offer=get_offer_config())
         leads = [LeadInput(**row) for _, row in df.iterrows()]
         
         results = []
@@ -621,7 +1252,7 @@ def process_leads(df, user_email, num_leads):
 
 def display_results(results, num_leads, user_email, users):
     """Display processing results"""
-    st.header("📊 Results & Insights")
+    st.header("Results and insights")
     
     high_priority = sum(1 for r in results if r.priority == 'HIGH')
     medium_priority = sum(1 for r in results if r.priority == 'MEDIUM')
@@ -630,33 +1261,13 @@ def display_results(results, num_leads, user_email, users):
     # Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f"""
-        <div style='border-left: 4px solid #667eea; padding: 1rem; background: #f8f9fa;'>
-            <h2 style='color: #667eea; margin: 0;'>{len(results)}</h2>
-            <p style='color: #666; margin: 0;'>Total Leads</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Total leads", len(results))
     with col2:
-        st.markdown(f"""
-        <div style='border-left: 4px solid #e74c3c; padding: 1rem; background: #f8f9fa;'>
-            <h2 style='color: #e74c3c; margin: 0;'>🔥 {high_priority}</h2>
-            <p style='color: #666; margin: 0;'>HIGH Priority</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("High priority", high_priority)
     with col3:
-        st.markdown(f"""
-        <div style='border-left: 4px solid #f39c12; padding: 1rem; background: #f8f9fa;'>
-            <h2 style='color: #f39c12; margin: 0;'>📊 {medium_priority}</h2>
-            <p style='color: #666; margin: 0;'>MEDIUM Priority</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Medium priority", medium_priority)
     with col4:
-        st.markdown(f"""
-        <div style='border-left: 4px solid #95a5a6; padding: 1rem; background: #f8f9fa;'>
-            <h2 style='color: #95a5a6; margin: 0;'>📉 {low_priority}</h2>
-            <p style='color: #666; margin: 0;'>LOW Priority</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Low priority", low_priority)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -667,13 +1278,13 @@ def display_results(results, num_leads, user_email, users):
         lambda x: '; '.join(x) if x else ''
     )
     
-    st.subheader("📋 All Results")
+    st.subheader("All results")
     st.dataframe(df_results, width=None, height=300)
     
     # High priority leads detail
     if high_priority > 0:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("🔥 HIGH Priority Leads - Ready to Contact!")
+        st.subheader("High-priority leads (ready to contact)")
         
         high_df = df_results[df_results['priority'] == 'HIGH']
         
@@ -696,7 +1307,7 @@ def display_results(results, num_leads, user_email, users):
     
     # Download section
     st.markdown("<br>", unsafe_allow_html=True)
-    st.header("💾 Download Your Results")
+    st.header("Download results")
     
     col1, col2, col3 = st.columns(3)
     
@@ -742,7 +1353,18 @@ def display_results(results, num_leads, user_email, users):
 
 def results_section():
     """Results viewing section"""
-    st.markdown("### 📊 Your Previous Results")
+    st.markdown(
+        """
+        <div class="comic-panel">
+            <h2 style="margin-top: 0;">Results</h2>
+            <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                Your saved leads, scores, and outreach drafts.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
     
     if not st.session_state.results:
         st.info("No results yet. Upload and process leads in the 'Upload Leads' tab!")
@@ -810,19 +1432,37 @@ def results_section():
 
 def credits_section(user_email):
     """Credits management section"""
-    st.markdown("### 💳 Manage Your Credits")
+    st.markdown(
+        """
+        <div class="comic-panel">
+            <h2 style="margin-top: 0;">Credits</h2>
+            <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
+                Credits power lead processing. <b>1 qualified lead = 1 credit</b>.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     users = load_users()
     user_info = users.get(user_email, {})
     
     # Current balance
-    st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                   padding: 2rem; border-radius: 1rem; text-align: center; color: white; margin-bottom: 2rem;'>
-            <h1 style='margin: 0; font-size: 3rem;'>{user_info.get('credits', 0)}</h1>
-            <p style='margin: 0.5rem 0 0 0; font-size: 1.2rem;'>Available Credits</p>
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="comic-hero" style="text-align: center;">
+            <span class="comic-kicker" style="background: var(--comic-primary);">Balance</span>
+            <div style="font-family: var(--comic-font-title); font-size: 4rem; margin-top: 0.9rem;">
+                {user_info.get("credits", 0)}
+            </div>
+            <p class="comic-subtitle" style="margin-top: 0.2rem; margin-bottom: 0;">
+                credits available
+            </p>
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Usage stats
     col1, col2 = st.columns(2)
@@ -834,43 +1474,52 @@ def credits_section(user_email):
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Credit packages
-    st.subheader("💰 Purchase Credits")
+    st.subheader("Purchase credits")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("""
-            <div style='border: 2px solid #667eea; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
-                <h3 style='color: #667eea;'>Starter</h3>
-                <h2>50 Credits</h2>
-                <p style='font-size: 1.5rem; color: #667eea;'>$49</p>
-                <p style='color: #666;'>Perfect for small teams</p>
+        st.markdown(
+            """
+            <div class="comic-panel" style="text-align: center;">
+                <span class="comic-kicker" style="background: var(--comic-secondary);">Starter</span>
+                <h2 style="margin-top: 0.9rem; margin-bottom: 0.25rem;">50 credits</h2>
+                <div style="font-family: var(--comic-font-title); font-size: 2.2rem;">$49</div>
+                <p class="comic-micro" style="margin-bottom: 0;">Perfect for solo sprints</p>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
         if st.button("Buy Starter", width="stretch"):
             st.info("Payment integration coming soon!")
     
     with col2:
-        st.markdown("""
-            <div style='border: 2px solid #764ba2; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
-                <h3 style='color: #764ba2;'>Professional</h3>
-                <h2>200 Credits</h2>
-                <p style='font-size: 1.5rem; color: #764ba2;'>$149</p>
-                <p style='color: #666;'>Most popular choice</p>
+        st.markdown(
+            """
+            <div class="comic-panel" style="text-align: center;">
+                <span class="comic-kicker" style="background: var(--comic-primary);">Professional</span>
+                <h2 style="margin-top: 0.9rem; margin-bottom: 0.25rem;">200 credits</h2>
+                <div style="font-family: var(--comic-font-title); font-size: 2.2rem;">$149</div>
+                <p class="comic-micro" style="margin-bottom: 0;">Best for weekly outreach</p>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
         if st.button("Buy Professional", width="stretch"):
             st.info("Payment integration coming soon!")
     
     with col3:
-        st.markdown("""
-            <div style='border: 2px solid #e74c3c; border-radius: 0.5rem; padding: 1.5rem; text-align: center;'>
-                <h3 style='color: #e74c3c;'>Enterprise</h3>
-                <h2>1000 Credits</h2>
-                <p style='font-size: 1.5rem; color: #e74c3c;'>$499</p>
-                <p style='color: #666;'>Best value for scale</p>
+        st.markdown(
+            """
+            <div class="comic-panel" style="text-align: center;">
+                <span class="comic-kicker" style="background: var(--comic-danger);">Enterprise</span>
+                <h2 style="margin-top: 0.9rem; margin-bottom: 0.25rem;">1000 credits</h2>
+                <div style="font-family: var(--comic-font-title); font-size: 2.2rem;">$499</div>
+                <p class="comic-micro" style="margin-bottom: 0;">Built for teams at scale</p>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
         if st.button("Buy Enterprise", width="stretch"):
             st.info("Payment integration coming soon!")
 

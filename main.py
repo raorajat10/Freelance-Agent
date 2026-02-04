@@ -48,7 +48,7 @@ class LeadQualificationPipeline:
         
         # Agent 4: Generate outreach (only for high/medium priority)
         if scoring.priority.value in ['HIGH', 'MEDIUM']:
-            outreach = self.outreach_gen.generate(lead, classification)
+            outreach = self.outreach_gen.generate(lead, classification, scoring)
         else:
             outreach = "Low priority - no outreach generated"
         

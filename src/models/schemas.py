@@ -45,6 +45,7 @@ class WebsiteInspectionResult(BaseModel):
     has_https: bool = False
     has_mobile_viewport: bool = False
     has_cta: bool = False
+    pages_visited: int = 0
     error_message: Optional[str] = None
 
 
