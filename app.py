@@ -78,6 +78,21 @@ div[data-testid="stSelectbox"] div[role="combobox"] {
     border: 3px solid var(--comic-ink) !important;
     border-radius: 14px !important;
     box-shadow: 3px 3px 0 rgba(0,0,0,0.55) !important;
+    background: #fff !important;
+    color: var(--comic-ink) !important;
+}
+
+/* Selectbox text + dropdown options */
+div[data-testid="stSelectbox"] span,
+div[data-testid="stSelectbox"] div[role="combobox"] * {
+    color: var(--comic-ink) !important;
+}
+ul[role="listbox"] li,
+ul[role="listbox"] span {
+    color: var(--comic-ink) !important;
+}
+div[data-baseweb="popover"] {
+    color: var(--comic-ink) !important;
 }
 
 /* Buttons */
@@ -149,7 +164,10 @@ pre {
     border: 3px solid var(--comic-ink) !important;
     border-radius: var(--comic-radius) !important;
     box-shadow: var(--comic-shadow-soft) !important;
+    background: #0f172a !important;
+    color: #f8fafc !important;
 }
+pre code { color: #f8fafc !important; }
 
 /* Custom building blocks */
 .comic-hero {
