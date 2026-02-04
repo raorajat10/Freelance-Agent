@@ -111,7 +111,7 @@ div[role="option"] {
 div[role="option"]:hover,
 div[role="option"][aria-selected="true"] {
     background: #fef3c7 !important;
-    color: #111 !important;
+    color: white !important;
 }
 
 /* Expander chevron text issue */
