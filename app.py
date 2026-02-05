@@ -78,7 +78,7 @@ div[data-testid="stSelectbox"] div[role="combobox"] {
     border: 3px solid var(--comic-ink) !important;
     border-radius: 14px !important;
     box-shadow: 3px 3px 0 rgba(0,0,0,0.55) !important;
-    background: #111 !important;
+    background: #fff !important;
     color: var(--comic-ink) !important;
 }
 /* Selected value + placeholder inside selectbox */
