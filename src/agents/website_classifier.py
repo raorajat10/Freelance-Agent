@@ -97,18 +97,14 @@ class WebsiteClassifier:
             },
             "editor": {
                 "Improve headlines and meta descriptions for search clarity",
-                "Add a clear primary call-to-action",
-                "Add a short inquiry/contact form",
                 "Add testimonials or case studies for trust",
-                "Add Open Graph tags for better sharing previews",
+                "Add a clear primary call-to-action",
                 "Add social proof links (LinkedIn/Instagram)",
             },
             "copywriter": {
                 "Improve headlines and meta descriptions for search clarity",
-                "Add a clear primary call-to-action",
-                "Add a short inquiry/contact form",
                 "Add testimonials or case studies for trust",
-                "Add Open Graph tags for better sharing previews",
+                "Add a clear primary call-to-action",
                 "Add social proof links (LinkedIn/Instagram)",
             },
             "seo": {
