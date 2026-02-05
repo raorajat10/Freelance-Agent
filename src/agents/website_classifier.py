@@ -62,6 +62,10 @@ class WebsiteClassifier:
         # Growth recommendations (used even when the website is acceptable)
         if not inspection.has_meta_description or not inspection.has_h1:
             recommendations.append("Improve headlines and meta descriptions for search clarity")
+        if not inspection.has_cta:
+            recommendations.append("Add a clear primary call-to-action")
+        if not inspection.has_contact_form:
+            recommendations.append("Add a short inquiry/contact form")
         if not inspection.has_chat_widget:
             recommendations.append("Add live chat or chatbot for faster inquiries")
         if not inspection.has_booking:
@@ -82,18 +86,20 @@ class WebsiteClassifier:
         persona_filters = {
             "sales": {
                 "Improve headlines and meta descriptions for search clarity",
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add live chat or chatbot for faster inquiries",
                 "Add booking or appointment scheduling",
                 "Add testimonials or case studies for trust",
-                "Add analytics to track leads (GA4)",
-                "Add Open Graph tags for better sharing previews",
+                "Add social proof links (LinkedIn/Instagram)",
             },
             "editor": {
                 "Improve headlines and meta descriptions for search clarity",
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add testimonials or case studies for trust",
                 "Add Open Graph tags for better sharing previews",
-                "Add structured data (schema.org) for SEO",
-                "Add analytics to track leads (GA4)",
+                "Add social proof links (LinkedIn/Instagram)",
             },
             "seo": {
                 "Improve headlines and meta descriptions for search clarity",
@@ -102,23 +108,29 @@ class WebsiteClassifier:
                 "Add Open Graph tags for better sharing previews",
             },
             "virtual assistant": {
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add booking or appointment scheduling",
                 "Add live chat or chatbot for faster inquiries",
-                "Add analytics to track leads (GA4)",
             },
             "video editor": {
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add testimonials or case studies for trust",
                 "Add social proof links (LinkedIn/Instagram)",
                 "Add Open Graph tags for better sharing previews",
-                "Add analytics to track leads (GA4)",
             },
             "graphic designer": {
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add testimonials or case studies for trust",
                 "Add social proof links (LinkedIn/Instagram)",
                 "Add Open Graph tags for better sharing previews",
             },
             "web developer": {
                 "Improve headlines and meta descriptions for search clarity",
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
                 "Add structured data (schema.org) for SEO",
                 "Add analytics to track leads (GA4)",
                 "Add Open Graph tags for better sharing previews",
