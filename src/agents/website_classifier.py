@@ -74,6 +74,8 @@ class WebsiteClassifier:
             recommendations.append("Add testimonials or case studies for trust")
         if not inspection.has_social_links:
             recommendations.append("Add social proof links (LinkedIn/Instagram)")
+        if not inspection.has_instagram and not inspection.has_youtube and not inspection.has_tiktok:
+            recommendations.append("Add a portfolio social channel (Instagram/YouTube/TikTok)")
         if not inspection.has_analytics:
             recommendations.append("Add analytics to track leads (GA4)")
         if not inspection.has_open_graph:
@@ -127,6 +129,7 @@ class WebsiteClassifier:
                 "Add testimonials or case studies for trust",
                 "Add social proof links (LinkedIn/Instagram)",
                 "Add Open Graph tags for better sharing previews",
+                "Add a portfolio social channel (Instagram/YouTube/TikTok)",
             },
             "graphic designer": {
                 "Add a clear primary call-to-action",
@@ -134,6 +137,7 @@ class WebsiteClassifier:
                 "Add testimonials or case studies for trust",
                 "Add social proof links (LinkedIn/Instagram)",
                 "Add Open Graph tags for better sharing previews",
+                "Add a portfolio social channel (Instagram/YouTube/TikTok)",
             },
             "web developer": {
                 "Improve headlines and meta descriptions for search clarity",
@@ -156,6 +160,7 @@ class WebsiteClassifier:
                 allowed = persona_filters[matched_key]
                 recommendations = [r for r in recommendations if r in allowed]
                 recommendations = self._apply_persona_wording(recommendations, matched_key)
+                issues = self._filter_issues_for_persona(issues, matched_key)
 
         # If ANY issues → Weak Website
         if issues:
@@ -170,6 +175,61 @@ class WebsiteClassifier:
             issues=[],
             recommendations=recommendations,
         )
+
+    def _filter_issues_for_persona(self, issues, persona_key: str):
+        if not issues:
+            return issues
+        persona_issue_filters = {
+            "sales": {
+                "No clear call-to-action",
+                "No contact form detected",
+                "Limited site structure detected",
+            },
+            "editor": {
+                "No clear call-to-action",
+                "No contact form detected",
+                "Missing H1 headline",
+                "Missing meta description",
+            },
+            "copywriter": {
+                "No clear call-to-action",
+                "No contact form detected",
+                "Missing H1 headline",
+                "Missing meta description",
+            },
+            "seo": {
+                "Missing HTTPS",
+                "Not mobile-friendly",
+                "Missing meta description",
+                "Missing H1 headline",
+                "Limited site structure detected",
+            },
+            "virtual assistant": {
+                "No clear call-to-action",
+                "No contact form detected",
+            },
+            "video editor": {
+                "No clear call-to-action",
+                "No contact form detected",
+            },
+            "graphic designer": {
+                "No clear call-to-action",
+                "No contact form detected",
+            },
+            "web developer": {
+                "Missing HTTPS",
+                "Not mobile-friendly",
+                "No clear call-to-action",
+                "Missing meta description",
+                "Missing H1 headline",
+                "No contact form detected",
+                "Limited site structure detected",
+            },
+        }
+        allowed = persona_issue_filters.get(persona_key)
+        if not allowed:
+            return issues
+        return [i for i in issues if i in allowed]
 
     def _apply_persona_wording(self, recommendations, persona_key: str):
         if not recommendations:

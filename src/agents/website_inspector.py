@@ -97,6 +97,10 @@ class WebsiteInspector:
             has_chat_widget=self._has_chat_widget(soup),
             has_testimonials=self._has_testimonials(soup),
             has_social_links=self._has_social_links(soup),
+            has_instagram=self._has_social_platform(soup, "instagram.com"),
+            has_youtube=self._has_social_platform(soup, "youtube.com"),
+            has_tiktok=self._has_social_platform(soup, "tiktok.com"),
+            has_linkedin=self._has_social_platform(soup, "linkedin.com"),
             has_analytics=self._has_analytics(soup),
             has_structured_data=self._has_structured_data(soup),
         )
@@ -179,6 +183,15 @@ class WebsiteInspector:
             socials = ["facebook.com", "instagram.com", "linkedin.com", "twitter.com", "x.com", "tiktok.com", "youtube.com"]
             for a in soup.find_all("a", href=True):
                 if any(s in a["href"].lower() for s in socials):
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _has_social_platform(self, soup: BeautifulSoup, domain: str) -> bool:
+        try:
+            for a in soup.find_all("a", href=True):
+                if domain in a["href"].lower():
                     return True
             return False
         except Exception:

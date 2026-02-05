@@ -54,6 +54,10 @@ class WebsiteInspectionResult(BaseModel):
     has_chat_widget: bool = False
     has_testimonials: bool = False
     has_social_links: bool = False
+    has_instagram: bool = False
+    has_youtube: bool = False
+    has_tiktok: bool = False
+    has_linkedin: bool = False
     has_analytics: bool = False
     has_structured_data: bool = False
     error_message: Optional[str] = None
