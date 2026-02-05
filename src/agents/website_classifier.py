@@ -101,6 +101,14 @@ class WebsiteClassifier:
                 "Add Open Graph tags for better sharing previews",
                 "Add social proof links (LinkedIn/Instagram)",
             },
+            "copywriter": {
+                "Improve headlines and meta descriptions for search clarity",
+                "Add a clear primary call-to-action",
+                "Add a short inquiry/contact form",
+                "Add testimonials or case studies for trust",
+                "Add Open Graph tags for better sharing previews",
+                "Add social proof links (LinkedIn/Instagram)",
+            },
             "seo": {
                 "Improve headlines and meta descriptions for search clarity",
                 "Add structured data (schema.org) for SEO",
@@ -147,6 +155,7 @@ class WebsiteClassifier:
             if matched_key:
                 allowed = persona_filters[matched_key]
                 recommendations = [r for r in recommendations if r in allowed]
+                recommendations = self._apply_persona_wording(recommendations, matched_key)
 
         # If ANY issues → Weak Website
         if issues:
@@ -161,3 +170,71 @@ class WebsiteClassifier:
             issues=[],
             recommendations=recommendations,
         )
+
+    def _apply_persona_wording(self, recommendations, persona_key: str):
+        if not recommendations:
+            return recommendations
+        wording = {
+            "sales": {
+                "Improve headlines and meta descriptions for search clarity": "Tighten the headline so the offer is clear in seconds",
+                "Add a clear primary call-to-action": "Add one clear CTA (e.g., “Request a quote”) above the fold",
+                "Add a short inquiry/contact form": "Add a short inquiry form to capture leads fast",
+                "Add live chat or chatbot for faster inquiries": "Add live chat to capture inbound interest instantly",
+                "Add booking or appointment scheduling": "Add a booking link so prospects can schedule demos",
+                "Add testimonials or case studies for trust": "Add 2–3 client wins to build trust fast",
+                "Add social proof links (LinkedIn/Instagram)": "Add social proof links to build credibility",
+            },
+            "editor": {
+                "Improve headlines and meta descriptions for search clarity": "Improve the page headline and meta copy for clarity",
+                "Add a clear primary call-to-action": "Add a clear CTA line in the copy",
+                "Add a short inquiry/contact form": "Add a short contact form to capture briefs",
+                "Add testimonials or case studies for trust": "Add client quotes or mini case studies",
+                "Add Open Graph tags for better sharing previews": "Improve social share previews (Open Graph)",
+                "Add social proof links (LinkedIn/Instagram)": "Add social proof links near the CTA",
+            },
+            "copywriter": {
+                "Improve headlines and meta descriptions for search clarity": "Improve the page headline and meta copy for clarity",
+                "Add a clear primary call-to-action": "Add a clear CTA line in the copy",
+                "Add a short inquiry/contact form": "Add a short contact form to capture briefs",
+                "Add testimonials or case studies for trust": "Add client quotes or mini case studies",
+                "Add Open Graph tags for better sharing previews": "Improve social share previews (Open Graph)",
+                "Add social proof links (LinkedIn/Instagram)": "Add social proof links near the CTA",
+            },
+            "seo": {
+                "Improve headlines and meta descriptions for search clarity": "Fix H1/meta description to match search intent",
+                "Add structured data (schema.org) for SEO": "Add schema markup for SEO",
+                "Add analytics to track leads (GA4)": "Add GA4 to track conversions",
+                "Add Open Graph tags for better sharing previews": "Add Open Graph tags for better sharing previews",
+            },
+            "virtual assistant": {
+                "Add a clear primary call-to-action": "Add a clear CTA so visitors know the next step",
+                "Add a short inquiry/contact form": "Add a short inquiry form to capture requests",
+                "Add booking or appointment scheduling": "Add a booking link for quick scheduling",
+                "Add live chat or chatbot for faster inquiries": "Add live chat to handle questions quickly",
+            },
+            "video editor": {
+                "Add a clear primary call-to-action": "Add a clear CTA under the portfolio section",
+                "Add a short inquiry/contact form": "Add a short form to collect project details",
+                "Add testimonials or case studies for trust": "Add before/after or client testimonial snippets",
+                "Add social proof links (LinkedIn/Instagram)": "Add social proof links near your work",
+                "Add Open Graph tags for better sharing previews": "Improve social share previews (Open Graph)",
+            },
+            "graphic designer": {
+                "Add a clear primary call-to-action": "Add a clear CTA under the portfolio section",
+                "Add a short inquiry/contact form": "Add a short form to collect project details",
+                "Add testimonials or case studies for trust": "Add client testimonials or mini case studies",
+                "Add social proof links (LinkedIn/Instagram)": "Add social proof links near your work",
+                "Add Open Graph tags for better sharing previews": "Improve social share previews (Open Graph)",
+            },
+            "web developer": {
+                "Improve headlines and meta descriptions for search clarity": "Improve H1/meta to clarify value fast",
+                "Add a clear primary call-to-action": "Add a clear primary CTA button",
+                "Add a short inquiry/contact form": "Add a short inquiry/contact form",
+                "Add structured data (schema.org) for SEO": "Add schema markup for SEO",
+                "Add analytics to track leads (GA4)": "Add GA4 to track conversions",
+                "Add Open Graph tags for better sharing previews": "Add Open Graph tags for better sharing previews",
+                "Add live chat or chatbot for faster inquiries": "Add live chat for faster inquiries",
+            },
+        }
+        mapper = wording.get(persona_key, {})
+        return [mapper.get(r, r) for r in recommendations]
