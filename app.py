@@ -103,6 +103,17 @@ div[data-testid="stSelectbox"] [data-baseweb="select"] * {
     color: #111 !important;
     opacity: 1 !important;
 }
+/* Sidebar selectbox hard override (selected value visibility) */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] [role="combobox"],
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background: #fff !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] [data-baseweb="select"] input,
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] [data-baseweb="select"] span,
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] [data-baseweb="select"] div {
+    color: #111 !important;
+    opacity: 1 !important;
+}
 
 /* Selectbox text + dropdown options */
 div[data-testid="stSelectbox"] span,
