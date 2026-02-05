@@ -87,14 +87,21 @@ div[data-testid="stSelectbox"] div[role="combobox"] {
 }
 div[data-testid="stSelectbox"] div[role="combobox"] * {
     color: #111 !important;
+    opacity: 1 !important;
 }
 div[data-testid="stSelectbox"] input,
 div[data-testid="stSelectbox"] div[role="combobox"] span {
     color: #111 !important;
+    opacity: 1 !important;
 }
 div[data-testid="stSelectbox"] [data-baseweb="select"] div,
 div[data-testid="stSelectbox"] [data-baseweb="select"] span {
     color: #111 !important;
+    opacity: 1 !important;
+}
+div[data-testid="stSelectbox"] [data-baseweb="select"] * {
+    color: #111 !important;
+    opacity: 1 !important;
 }
 
 /* Selectbox text + dropdown options */
