@@ -81,6 +81,21 @@ div[data-testid="stSelectbox"] div[role="combobox"] {
     background: #fff !important;
     color: var(--comic-ink) !important;
 }
+/* Selected value + placeholder inside selectbox */
+div[data-testid="stSelectbox"] div[role="combobox"] {
+    background: #fff !important;
+}
+div[data-testid="stSelectbox"] div[role="combobox"] * {
+    color: #111 !important;
+}
+div[data-testid="stSelectbox"] input,
+div[data-testid="stSelectbox"] div[role="combobox"] span {
+    color: #111 !important;
+}
+div[data-testid="stSelectbox"] [data-baseweb="select"] div,
+div[data-testid="stSelectbox"] [data-baseweb="select"] span {
+    color: #111 !important;
+}
 
 /* Selectbox text + dropdown options */
 div[data-testid="stSelectbox"] span,
@@ -255,6 +270,8 @@ pre {
 }
 pre code { color: #f8fafc !important; }
 div[data-testid="stCodeBlock"] pre * { color: #f8fafc !important; }
+div[data-testid="stCodeBlock"] span,
+div[data-testid="stCodeBlock"] code { color: #f8fafc !important; }
 
 /* Custom building blocks */
 .comic-hero {
