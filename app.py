@@ -128,6 +128,28 @@ div[data-baseweb="listbox"] * {
     color: #111 !important;
 }
 
+/* BaseWeb select dropdown (Streamlit 1.5x) */
+div[data-baseweb="select"] [role="listbox"],
+div[data-baseweb="select"] ul {
+    background: #fff !important;
+    border: 3px solid var(--comic-ink) !important;
+    box-shadow: var(--comic-shadow-soft) !important;
+}
+div[data-baseweb="select"] [role="option"],
+div[data-baseweb="select"] li {
+    background: #fff !important;
+    color: #111 !important;
+}
+div[data-baseweb="select"] [role="option"]:hover,
+div[data-baseweb="select"] li:hover,
+div[data-baseweb="select"] [role="option"][aria-selected="true"] {
+    background: #fef3c7 !important;
+    color: #111 !important;
+}
+div[data-baseweb="select"] * {
+    color: #111 !important;
+}
+
 /* Expander chevron text issue */
 /* CLEAN expander header */
 div[data-testid="stExpander"] summary {
@@ -140,7 +162,9 @@ div[data-testid="stExpander"] summary {
 /* Hide Streamlit default arrow completely */
 div[data-testid="stExpander"] summary svg,
 div[data-testid="stExpander"] summary [data-testid="stIcon"],
-div[data-testid="stExpander"] summary .material-icons {
+div[data-testid="stExpander"] summary .material-icons,
+div[data-testid="stExpander"] summary span[translate="no"],
+div[data-testid="stExpander"] summary span[class*="material"] {
     display: none !important;
 }
 div[data-testid="stExpander"] summary::-webkit-details-marker {
@@ -230,6 +254,7 @@ pre {
     color: #f8fafc !important;
 }
 pre code { color: #f8fafc !important; }
+div[data-testid="stCodeBlock"] pre * { color: #f8fafc !important; }
 
 /* Custom building blocks */
 .comic-hero {
