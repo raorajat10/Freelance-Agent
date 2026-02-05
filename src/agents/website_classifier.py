@@ -80,7 +80,7 @@ class WebsiteClassifier:
         # Persona-specific filtering
         persona_key = (persona or "").strip().lower()
         persona_filters = {
-            "sales / sdr freelancer": {
+            "sales": {
                 "Improve headlines and meta descriptions for search clarity",
                 "Add live chat or chatbot for faster inquiries",
                 "Add booking or appointment scheduling",
@@ -88,14 +88,14 @@ class WebsiteClassifier:
                 "Add analytics to track leads (GA4)",
                 "Add Open Graph tags for better sharing previews",
             },
-            "copywriter / editor": {
+            "editor": {
                 "Improve headlines and meta descriptions for search clarity",
                 "Add testimonials or case studies for trust",
                 "Add Open Graph tags for better sharing previews",
                 "Add structured data (schema.org) for SEO",
                 "Add analytics to track leads (GA4)",
             },
-            "seo consultant": {
+            "seo": {
                 "Improve headlines and meta descriptions for search clarity",
                 "Add structured data (schema.org) for SEO",
                 "Add analytics to track leads (GA4)",
@@ -126,9 +126,15 @@ class WebsiteClassifier:
             },
         }
 
-        if persona_key in persona_filters:
-            allowed = persona_filters[persona_key]
-            recommendations = [r for r in recommendations if r in allowed]
+        if persona_key:
+            matched_key = None
+            for key in persona_filters.keys():
+                if key in persona_key:
+                    matched_key = key
+                    break
+            if matched_key:
+                allowed = persona_filters[matched_key]
+                recommendations = [r for r in recommendations if r in allowed]
 
         # If ANY issues → Weak Website
         if issues:
