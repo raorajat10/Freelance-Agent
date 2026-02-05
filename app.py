@@ -290,6 +290,16 @@ pre code { color: #f8fafc !important; }
 div[data-testid="stCodeBlock"] pre * { color: #f8fafc !important; }
 div[data-testid="stCodeBlock"] span,
 div[data-testid="stCodeBlock"] code { color: #f8fafc !important; }
+/* Force st.code blocks (outreach) to be high-contrast */
+div[data-testid="stCodeBlock"] pre {
+    background: #fff !important;
+    color: #111 !important;
+}
+div[data-testid="stCodeBlock"] pre *,
+div[data-testid="stCodeBlock"] code,
+div[data-testid="stCodeBlock"] span {
+    color: #111 !important;
+}
 
 /* Custom building blocks */
 .comic-hero {
