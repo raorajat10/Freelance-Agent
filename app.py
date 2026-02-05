@@ -283,21 +283,23 @@ pre {
     border: 3px solid var(--comic-ink) !important;
     border-radius: var(--comic-radius) !important;
     box-shadow: var(--comic-shadow-soft) !important;
-    background: #0f172a !important;
-    color: #f8fafc !important;
+    background: #ffffff !important;
+    color: #111 !important;
 }
-pre code { color: #f8fafc !important; }
-div[data-testid="stCodeBlock"] pre * { color: #f8fafc !important; }
-div[data-testid="stCodeBlock"] span,
-div[data-testid="stCodeBlock"] code { color: #f8fafc !important; }
+pre code { color: #111 !important; }
 /* Force st.code blocks (outreach) to be high-contrast */
+div[data-testid="stCodeBlock"] {
+    background: #ffffff !important;
+    color: #111 !important;
+}
 div[data-testid="stCodeBlock"] pre {
-    background: #fff !important;
+    background: #ffffff !important;
     color: #111 !important;
 }
 div[data-testid="stCodeBlock"] pre *,
 div[data-testid="stCodeBlock"] code,
-div[data-testid="stCodeBlock"] span {
+div[data-testid="stCodeBlock"] span,
+div[data-testid="stCodeBlock"] div {
     color: #111 !important;
 }
 
