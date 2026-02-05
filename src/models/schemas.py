@@ -46,6 +46,16 @@ class WebsiteInspectionResult(BaseModel):
     has_mobile_viewport: bool = False
     has_cta: bool = False
     pages_visited: int = 0
+    has_meta_description: bool = False
+    has_h1: bool = False
+    has_open_graph: bool = False
+    has_contact_form: bool = False
+    has_booking: bool = False
+    has_chat_widget: bool = False
+    has_testimonials: bool = False
+    has_social_links: bool = False
+    has_analytics: bool = False
+    has_structured_data: bool = False
     error_message: Optional[str] = None
 
 
@@ -53,6 +63,7 @@ class ClassificationResult(BaseModel):
     """Output from Agent 2: Website Classifier"""
     website_status: WebsiteStatus
     issues: List[str] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
 
 
 class ScoringResult(BaseModel):
@@ -70,3 +81,4 @@ class LeadOutput(BaseModel):
     lead_score: int
     priority: str
     outreach_message: str
+    recommendations: List[str] = Field(default_factory=list)

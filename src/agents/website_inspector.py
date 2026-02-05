@@ -80,6 +80,7 @@ class WebsiteInspector:
 
         # 🔍 Aggregate analysis across all visited pages
         combined_html = " ".join(pages_html)
+        soup = BeautifulSoup(combined_html, "html.parser")
 
         return WebsiteInspectionResult(
             website_exists=True,
@@ -87,7 +88,17 @@ class WebsiteInspector:
             has_https=website_url.startswith("https://"),
             has_mobile_viewport=self._check_mobile_viewport(combined_html),
             has_cta=self._check_cta_keywords(combined_html),
-            pages_visited=len(visited)  # ← optional but VERY useful
+            pages_visited=len(visited),  # ← optional but VERY useful
+            has_meta_description=self._has_meta_description(soup),
+            has_h1=self._has_h1(soup),
+            has_open_graph=self._has_open_graph(soup),
+            has_contact_form=self._has_contact_form(soup),
+            has_booking=self._has_booking(soup),
+            has_chat_widget=self._has_chat_widget(soup),
+            has_testimonials=self._has_testimonials(soup),
+            has_social_links=self._has_social_links(soup),
+            has_analytics=self._has_analytics(soup),
+            has_structured_data=self._has_structured_data(soup),
         )
 
     def _check_mobile_viewport(self, html: str) -> bool:
@@ -101,6 +112,89 @@ class WebsiteInspector:
         try:
             html_lower = html.lower()
             return any(keyword in html_lower for keyword in self.cta_keywords)
+        except Exception:
+            return False
+
+    def _has_meta_description(self, soup: BeautifulSoup) -> bool:
+        try:
+            return soup.find("meta", attrs={"name": "description"}) is not None
+        except Exception:
+            return False
+
+    def _has_h1(self, soup: BeautifulSoup) -> bool:
+        try:
+            return soup.find("h1") is not None
+        except Exception:
+            return False
+
+    def _has_open_graph(self, soup: BeautifulSoup) -> bool:
+        try:
+            return soup.find("meta", attrs={"property": "og:title"}) is not None
+        except Exception:
+            return False
+
+    def _has_contact_form(self, soup: BeautifulSoup) -> bool:
+        try:
+            forms = soup.find_all("form")
+            for form in forms:
+                classes = " ".join(form.get("class", []))
+                identifier = f"{form.get('id', '')} {classes}".lower()
+                if form.find("input", attrs={"type": "email"}) or "contact" in identifier:
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _has_booking(self, soup: BeautifulSoup) -> bool:
+        try:
+            keywords = ["book", "booking", "appointment", "schedule", "calendly", "acuity", "setmore"]
+            text = soup.get_text(" ").lower()
+            if any(k in text for k in keywords):
+                return True
+            for a in soup.find_all("a", href=True):
+                if any(k in a["href"].lower() for k in keywords):
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _has_chat_widget(self, soup: BeautifulSoup) -> bool:
+        try:
+            providers = ["intercom", "tawk", "crisp", "drift", "livechat", "chatbot", "zendesk", "hubspot"]
+            scripts = " ".join([s.get("src", "") for s in soup.find_all("script")])
+            text = soup.get_text(" ").lower()
+            return any(p in scripts.lower() or p in text for p in providers)
+        except Exception:
+            return False
+
+    def _has_testimonials(self, soup: BeautifulSoup) -> bool:
+        try:
+            text = soup.get_text(" ").lower()
+            return "testimonial" in text or "what our clients say" in text or "reviews" in text
+        except Exception:
+            return False
+
+    def _has_social_links(self, soup: BeautifulSoup) -> bool:
+        try:
+            socials = ["facebook.com", "instagram.com", "linkedin.com", "twitter.com", "x.com", "tiktok.com", "youtube.com"]
+            for a in soup.find_all("a", href=True):
+                if any(s in a["href"].lower() for s in socials):
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _has_analytics(self, soup: BeautifulSoup) -> bool:
+        try:
+            scripts = " ".join([s.get("src", "") for s in soup.find_all("script")]).lower()
+            text = soup.get_text(" ").lower()
+            return any(k in scripts or k in text for k in ["gtag", "google-analytics", "gtm.js", "mixpanel", "plausible", "fathom"])
+        except Exception:
+            return False
+
+    def _has_structured_data(self, soup: BeautifulSoup) -> bool:
+        try:
+            return soup.find("script", attrs={"type": "application/ld+json"}) is not None
         except Exception:
             return False
 

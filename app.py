@@ -528,7 +528,7 @@ class LeadQualificationPipeline:
     
     def process_lead(self, lead: LeadInput) -> LeadOutput:
         inspection = self.inspector.inspect(lead.website_url)
-        classification = self.classifier.classify(inspection)
+        classification = self.classifier.classify(inspection, persona=self.offer.get("persona", ""))
         scoring = self.scorer.score(lead, classification)
         
         if scoring.priority.value in ['HIGH', 'MEDIUM']:
@@ -542,7 +542,8 @@ class LeadQualificationPipeline:
             website_issues=classification.issues,
             lead_score=scoring.lead_score,
             priority=scoring.priority.value,
-            outreach_message=outreach
+            outreach_message=outreach,
+            recommendations=classification.recommendations,
         )
     
     def cleanup(self):
@@ -849,6 +850,13 @@ def show_single_result(result: LeadOutput):
                 st.write(f"- {issue}")
         else:
             st.write("No major issues found")
+
+        st.markdown("**Growth Recommendations:**")
+        if result.recommendations:
+            for rec in result.recommendations:
+                st.write(f"- {rec}")
+        else:
+            st.write("No recommendations found")
 
     st.markdown("### 📧 Outreach Message")
     st.code(result.outreach_message)
@@ -1400,7 +1408,8 @@ def process_leads(df, user_email, num_leads):
                     website_issues=[str(e)],
                     lead_score=0,
                     priority="LOW",
-                    outreach_message="Processing failed"
+                    outreach_message="Processing failed",
+                    recommendations=[],
                 ))
             
             progress_bar.progress((idx + 1) / total)
@@ -1464,6 +1473,9 @@ def display_results(results, num_leads, user_email, users):
     df_results['website_issues'] = df_results['website_issues'].apply(
         lambda x: '; '.join(x) if x else ''
     )
+    df_results['recommendations'] = df_results['recommendations'].apply(
+        lambda x: '; '.join(x) if x else ''
+    )
     
     st.subheader("All results")
     st.dataframe(df_results, width=None, height=300)
@@ -1484,6 +1496,7 @@ def display_results(results, num_leads, user_email, users):
                 with col1:
                     st.markdown(f"**Status:** {row['website_status']}")
                     st.markdown(f"**Issues:** {row['website_issues']}")
+                    st.markdown(f"**Recommendations:** {row['recommendations']}")
                 with col2:
                     st.markdown(f"**Score:** {row['lead_score']}")
                     st.markdown(f"**Priority:** {row['priority']}")

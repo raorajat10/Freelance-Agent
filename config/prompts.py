@@ -11,7 +11,7 @@ Rules:
 
 Format:
 - First sentence: Acknowledge their business and location
-- Second sentence: State the specific issue (no website or weak website)
+- Second sentence: State one specific issue or improvement (if website is acceptable, use a recommendation)
 - Third sentence: Brief value proposition with price anchor"""
 
 OUTREACH_USER_PROMPT_TEMPLATE = """Generate a brief outreach message for this business:
@@ -22,6 +22,7 @@ City: {city}
 State: {state}
 Website Status: {website_status}
 Specific Issues: {issues}
+Recommendations: {recommendations}
 Lead priority: {lead_priority}
 
 Generate the outreach message now."""

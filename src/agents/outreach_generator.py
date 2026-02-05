@@ -9,7 +9,11 @@ OUTREACH_RELEVANT_ISSUES = {
     "Missing HTTPS",
     "Not mobile-friendly",
     "No clear call-to-action",
-    "No website found"
+    "No website found",
+    "Missing meta description",
+    "Missing H1 headline",
+    "No contact form detected",
+    "Limited site structure detected"
 }
 
 
@@ -79,6 +83,11 @@ class OutreachGenerator:
         ]
 
         issues_text = (", ".join(filtered_issues) if filtered_issues else "No major issues detected")
+        recommendations_text = (
+            ", ".join(classification.recommendations)
+            if getattr(classification, "recommendations", None)
+            else "None"
+        )
 
         lead_priority = scoring.priority.value if scoring else "UNKNOWN"
         
@@ -91,6 +100,7 @@ class OutreachGenerator:
                 state=lead.state,
                 website_status=classification.website_status.value,
                 issues=issues_text,
+                recommendations=recommendations_text,
                 lead_priority=lead_priority,
             )
         else:
@@ -104,6 +114,7 @@ class OutreachGenerator:
                 state=lead.state,
                 website_status=classification.website_status.value,
                 issues=issues_text,
+                recommendations=recommendations_text,
                 lead_priority=lead_priority,
             )
         
@@ -152,7 +163,7 @@ Rules:
 
 Format:
 - First sentence: Acknowledge their business and location
-- Second sentence: State the specific issue (no website or weak website)
+- Second sentence: State one specific issue or improvement (if website is acceptable, use a recommendation)
 - Third sentence: Brief value proposition with price anchor"""
 
     def _build_user_prompt(
@@ -166,6 +177,7 @@ Format:
         state: str,
         website_status: str,
         issues: str,
+        recommendations: str,
         lead_priority: str,
     ) -> str:
         return f"""Generate a brief outreach message for this business:
@@ -180,6 +192,7 @@ City: {city}
 State: {state}
 Website Status: {website_status}
 Specific Issues: {issues}
+Recommendations: {recommendations}
 Lead priority: {lead_priority}
 
 Generate the outreach message now."""
@@ -201,8 +214,12 @@ Generate the outreach message now."""
             )
         else:
             offer_line = offer_line or "Professional website upgrades"
+            recommendation = ""
+            if getattr(classification, "recommendations", None):
+                recommendation = classification.recommendations[0]
             return (
                 f"I noticed {lead.business_name}'s website in {city} could be improved. "
+                f"{(recommendation + '. ') if recommendation else ''}"
                 f"{offer_line} for {category} businesses start at {price_anchor}. "
                 f"Would you like to discuss how I can help?"
             )
