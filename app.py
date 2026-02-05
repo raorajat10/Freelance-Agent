@@ -69,6 +69,14 @@ section[data-testid="stSidebar"] {
     border-right: 3px solid var(--comic-ink);
 }
 section[data-testid="stSidebar"] * { font-family: var(--comic-font-body); }
+section[data-testid="stSidebar"] svg,
+section[data-testid="stSidebar"] [data-testid="stIcon"] {
+    color: var(--comic-ink) !important;
+    fill: var(--comic-ink) !important;
+}
+
+/* Hide Streamlit Cloud GitHub sign-in / toolbar items on the right */
+header [data-testid="stToolbar"] { visibility: hidden; }
 
 /* Inputs */
 div[data-testid="stTextInput"] input,
