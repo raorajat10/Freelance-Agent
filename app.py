@@ -453,42 +453,7 @@ PERSONA_PRESETS = {
         "service_label": "web design & web development",
         "offer_line": "Professional websites",
         "starting_price": 199,
-    },
-    "Sales / SDR Freelancer": {
-        "service_label": "sales outreach",
-        "offer_line": "Outbound outreach packages",
-        "starting_price": 199,
-    },
-    "Copywriter / Editor": {
-        "service_label": "copywriting and editing",
-        "offer_line": "Content writing and editing",
-        "starting_price": 199,
-    },
-    "Video Editor": {
-        "service_label": "video editing",
-        "offer_line": "Video editing packages",
-        "starting_price": 199,
-    },
-    "Graphic Designer": {
-        "service_label": "graphic design",
-        "offer_line": "Design packages",
-        "starting_price": 199,
-    },
-    "SEO Consultant": {
-        "service_label": "SEO optimization",
-        "offer_line": "SEO audits",
-        "starting_price": 199,
-    },
-    "Virtual Assistant": {
-        "service_label": "virtual assistant support",
-        "offer_line": "VA support packages",
-        "starting_price": 199,
-    },
-    "Custom": {
-        "service_label": "",
-        "offer_line": "",
-        "starting_price": 199,
-    },
+    }
 }
 
 
@@ -502,7 +467,7 @@ def _format_price_anchor(currency_symbol: str, starting_price) -> str:
 
 
 def get_offer_config() -> dict:
-    persona = st.session_state.get("persona", DEFAULT_PERSONA) or DEFAULT_PERSONA
+    persona = DEFAULT_PERSONA
     service_label = st.session_state.get("offer_service_label", "") or ""
     offer_line = st.session_state.get("offer_offer_line", "") or ""
     currency_symbol = st.session_state.get("offer_currency_symbol", DEFAULT_CURRENCY_SYMBOL) or DEFAULT_CURRENCY_SYMBOL
@@ -664,8 +629,6 @@ def init_session_state():
         st.session_state.results = []
     if 'credits' not in st.session_state:
         st.session_state.credits = 0
-    if "persona" not in st.session_state:
-        st.session_state.persona = DEFAULT_PERSONA
     if "offer_service_label" not in st.session_state:
         st.session_state.offer_service_label = PERSONA_PRESETS[DEFAULT_PERSONA]["service_label"]
     if "offer_offer_line" not in st.session_state:
@@ -676,8 +639,6 @@ def init_session_state():
         st.session_state.offer_currency_symbol = DEFAULT_CURRENCY_SYMBOL
     if "offer_loaded_for" not in st.session_state:
         st.session_state.offer_loaded_for = None
-    if "persona_last" not in st.session_state:
-        st.session_state.persona_last = None
 
 
 def calculate_priority_metrics(results):
@@ -750,17 +711,12 @@ def login_page():
         st.markdown(
             """
             <div class="comic-panel">
-                <h3 style="margin-top: 0;">Built for modern freelancers</h3>
+                <h3 style="margin-top: 0;">Built for web developers</h3>
                 <div style="margin-bottom: 0.3rem;">
                     <span class="comic-badge comic-badge--good">Web Design / Dev</span>
-                    <span class="comic-badge comic-badge--good">Copywriter / Editor</span>
-                    <span class="comic-badge comic-badge--good">Video Editor</span>
-                    <span class="comic-badge comic-badge--good">Sales / SDR</span>
-                    <span class="comic-badge comic-badge--good">SEO Consultant</span>
-                    <span class="comic-badge comic-badge--good">Virtual Assistant</span>
                 </div>
                 <p class="comic-micro" style="margin-bottom: 0;">
-                    After you sign in, pick a persona and offer so outreach matches your freelancing work.
+                    After you sign in, adjust your offer so outreach matches your web dev service.
                 </p>
             </div>
             """,
@@ -965,9 +921,8 @@ def main_app():
     user_data = get_or_create_user(user_email, user_name)
     st.session_state.credits = user_data['credits']
     
-    # Load persona/offer settings once per logged-in user
+    # Load offer settings once per logged-in user
     if st.session_state.offer_loaded_for != user_email:
-        st.session_state.persona = user_data.get("persona", DEFAULT_PERSONA)
         st.session_state.offer_service_label = user_data.get(
             "service_label", PERSONA_PRESETS[DEFAULT_PERSONA]["service_label"]
         )
@@ -979,7 +934,6 @@ def main_app():
         )
         st.session_state.offer_currency_symbol = user_data.get("currency_symbol", DEFAULT_CURRENCY_SYMBOL)
         st.session_state.offer_loaded_for = user_email
-        st.session_state.persona_last = st.session_state.persona
     
     # Load previous results
     previous_results = load_results(user_email)
@@ -1040,24 +994,14 @@ def main_app():
         st.markdown(
             """
             <div class="comic-panel">
-                <h3 style="margin-top: 0;">Persona & offer</h3>
+                <h3 style="margin-top: 0;">Offer settings</h3>
                 <p class="comic-micro" style="margin-top: 0; margin-bottom: 0;">
-                    Tailor outreach to your freelancing service.
+                    Customize how your web development offer is presented.
                 </p>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
-        persona_options = list(PERSONA_PRESETS.keys())
-        persona = st.selectbox("Persona", persona_options, key="persona")
-        if persona != st.session_state.persona_last:
-            st.session_state.persona_last = persona
-            preset = PERSONA_PRESETS.get(persona, PERSONA_PRESETS[DEFAULT_PERSONA])
-            if persona != "Custom":
-                st.session_state.offer_service_label = preset["service_label"]
-                st.session_state.offer_offer_line = preset["offer_line"]
-                st.session_state.offer_starting_price = preset["starting_price"]
 
         st.number_input("Starting price", min_value=0, step=1, key="offer_starting_price")
         with st.expander("Customize wording", expanded=False):
@@ -1065,10 +1009,9 @@ def main_app():
             st.text_input("Offer line", key="offer_offer_line", placeholder="e.g., Professional websites")
             st.text_input("Currency symbol", key="offer_currency_symbol", max_chars=3)
 
-        if st.button("Save persona & offer", width="stretch"):
+        if st.button("Save offer", width="stretch"):
             users = load_users()
             if user_email in users:
-                users[user_email]["persona"] = st.session_state.persona
                 users[user_email]["service_label"] = st.session_state.offer_service_label
                 users[user_email]["offer_line"] = st.session_state.offer_offer_line
                 users[user_email]["starting_price"] = st.session_state.offer_starting_price
@@ -1175,19 +1118,12 @@ def main_app():
         st.markdown(
             """
             <div class="comic-panel">
-                <h3 style="margin-top: 0;">Works for more than web dev</h3>
+                <h3 style="margin-top: 0;">Built for web development</h3>
                 <p class="comic-micro" style="margin-top: 0;">
-                    Use the same lead qualification workflow across different freelancing services:
+                    Qualify leads fast and personalize outreach for web development services.
                 </p>
-                <div>
-                    <span class="comic-badge comic-badge--alt">Sales outreach</span>
-                    <span class="comic-badge comic-badge--alt">Editors / copywriters</span>
-                    <span class="comic-badge comic-badge--alt">Video editors</span>
-                    <span class="comic-badge comic-badge--alt">Designers</span>
-                    <span class="comic-badge comic-badge--alt">SEO consultants</span>
-                </div>
                 <p class="comic-micro" style="margin-bottom: 0;">
-                    Set your persona and offer in the sidebar (so outreach reflects your service).
+                    Set your offer in the sidebar (so outreach reflects your dev service).
                 </p>
             </div>
             """,
