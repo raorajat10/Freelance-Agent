@@ -496,7 +496,7 @@ class LeadQualificationPipeline:
         classification = self.classifier.classify(inspection, persona=self.offer.get("persona", ""))
         scoring = self.scorer.score(lead, classification)
         
-        if scoring.priority.value in ['HIGH', 'MEDIUM']:
+        if scoring.priority.value in ['HIGH', 'MEDIUM'] or classification.recommendations:
             outreach = self.outreach_gen.generate(lead, classification, scoring, offer=self.offer)
         else:
             outreach = "Low priority - no outreach generated"

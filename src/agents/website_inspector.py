@@ -8,8 +8,10 @@ from config.settings import CTA_KEYWORDS
 
 
 IMPORTANT_KEYWORDS = [
-    "about", "service", "contact",
-    "pricing", "solution", "company"
+    "about", "service", "services", "contact", "contact-us",
+    "pricing", "solution", "company",
+    "portfolio", "work", "projects", "case", "case-study", "case-studies",
+    "book", "booking", "schedule", "appointment", "quote", "estimate"
 ]
 
 EXCLUDE_KEYWORDS = [
@@ -29,7 +31,7 @@ class WebsiteInspector:
     - Deterministic & factual
     """
 
-    def __init__(self, cta_keywords: List[str] = None, max_pages: int = 5):
+    def __init__(self, cta_keywords: List[str] = None, max_pages: int = 12):
         self.cta_keywords = cta_keywords or CTA_KEYWORDS
         self.max_pages = max_pages
         self.http_client = HTTPClient()
