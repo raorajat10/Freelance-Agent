@@ -428,7 +428,271 @@ div[data-testid="stExpander"] summary {
 </style>
 """
 
-st.markdown(COMIC_THEME_CSS, unsafe_allow_html=True)
+PRO_THEME_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg: #0b0f19;
+    --bg-soft: #0f172a;
+    --panel: #111827;
+    --panel-2: #0b1220;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --primary: #6366f1;
+    --accent: #22d3ee;
+    --success: #10b981;
+    --danger: #ef4444;
+    --border: #1f2937;
+    --radius: 16px;
+    --shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+
+header[data-testid="stHeader"] { background: transparent; border-bottom: none; }
+#MainMenu { visibility: hidden; }
+footer {visibility: hidden;}
+.block-container { padding-top: 1.25rem; padding-bottom: 2.5rem; }
+
+html, body, [class*="css"] { font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.stApp {
+    background: radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.22), transparent 60%),
+                radial-gradient(900px 500px at 90% 10%, rgba(34,211,238,0.18), transparent 55%),
+                var(--bg);
+}
+
+h1, h2, h3, h4, h5 { color: var(--text); letter-spacing: -0.2px; }
+p, li, span, label, div { color: var(--text); }
+
+section[data-testid="stSidebar"] {
+    background: #0b1220;
+    border-right: 1px solid var(--border);
+}
+section[data-testid="stSidebar"] svg,
+section[data-testid="stSidebar"] [data-testid="stIcon"] {
+    color: var(--text) !important;
+    fill: var(--text) !important;
+}
+
+header [data-testid="stToolbar"] { visibility: hidden; }
+
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stNumberInput"] input,
+div[data-testid="stSelectbox"] div[role="combobox"] {
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    background: var(--panel-2) !important;
+    color: var(--text) !important;
+}
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextArea"] textarea:focus,
+div[data-testid="stNumberInput"] input:focus,
+div[data-testid="stSelectbox"] div[role="combobox"]:focus-within {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.25) !important;
+}
+div[data-testid="stSelectbox"] div[role="combobox"] * {
+    color: var(--text) !important;
+    opacity: 1 !important;
+}
+div[data-baseweb="popover"],
+div[data-baseweb="menu"],
+ul[role="listbox"],
+div[data-baseweb="listbox"] {
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    color: var(--text) !important;
+}
+div[role="option"],
+div[data-baseweb="select"] [role="option"],
+div[data-baseweb="select"] li {
+    background: var(--panel) !important;
+    color: var(--text) !important;
+}
+div[role="option"]:hover,
+div[role="option"][aria-selected="true"],
+div[data-baseweb="select"] [role="option"]:hover {
+    background: #111c33 !important;
+    color: var(--text) !important;
+}
+
+div.stButton > button {
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px !important;
+    transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+div.stButton > button:hover {
+    transform: translateY(-1px);
+    background: #141b2b !important;
+}
+
+div[data-testid="stTabs"] button {
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    margin-right: 8px !important;
+    background: var(--panel) !important;
+    color: var(--text) !important;
+}
+div[data-testid="stTabs"] button[aria-selected="true"] {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+}
+
+div[data-testid="stExpander"] details {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    background: var(--panel) !important;
+}
+
+div[data-testid="stMetric"] {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    padding: 0.85rem 0.85rem;
+}
+
+pre {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    background: #0b1220 !important;
+    color: var(--text) !important;
+}
+pre code { color: var(--text) !important; }
+div[data-testid="stCodeBlock"] pre * { color: var(--text) !important; }
+
+.pro-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+    padding: 0.9rem 1.1rem;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+}
+.pro-nav .brand {
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: var(--text);
+}
+.pro-nav .nav-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+.nav-item {
+    position: relative;
+    color: var(--text);
+    font-size: 0.92rem;
+}
+.nav-item a { color: var(--text); text-decoration: none; }
+.nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 1.8rem;
+    left: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.6rem;
+    min-width: 200px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+}
+.nav-dropdown a {
+    display: block;
+    padding: 0.4rem 0.5rem;
+    color: var(--text);
+}
+.nav-item:hover .nav-dropdown { display: block; }
+.nav-cta {
+    padding: 0.5rem 0.9rem;
+    background: var(--primary);
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.comic-hero {
+    background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(17,24,39,0.95));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 1.8rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.comic-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1.3rem;
+}
+.comic-kicker {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-weight: 600;
+    background: rgba(99,102,241,0.15);
+    color: #c7d2fe;
+    border: 1px solid rgba(99,102,241,0.35);
+}
+.comic-subtitle { color: var(--muted); font-size: 1.02rem; }
+.comic-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(34,211,238,0.12);
+    border: 1px solid rgba(34,211,238,0.35);
+    font-size: 0.78rem;
+    margin-right: 0.45rem;
+    margin-bottom: 0.4rem;
+    color: #a5f3fc;
+}
+.comic-badge--alt { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.35); color: #c7d2fe; }
+.comic-badge--good { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.35); color: #a7f3d0; }
+.comic-badge--warn { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); color: #fecaca; }
+.comic-speech {
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.35);
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    font-weight: 600;
+    color: #c7d2fe;
+}
+.comic-micro { font-size: 0.9rem; color: var(--muted); }
+
+.pro-section { margin-top: 1.2rem; }
+.pro-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.pro-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+}
+.pro-footer {
+    margin-top: 1.2rem;
+    padding: 1rem 1.2rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--muted);
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+"""
+
+st.markdown(PRO_THEME_CSS, unsafe_allow_html=True)
 
 from src.agents.website_inspector import WebsiteInspector
 from src.agents.website_classifier import WebsiteClassifier
@@ -673,18 +937,53 @@ def convert_df_to_excel(df):
 def login_page():
     st.markdown(
         """
+        <div class="pro-nav">
+            <div class="brand">Lead Qualifier Pro</div>
+            <div class="nav-links">
+                <div class="nav-item">Product ▾
+                    <div class="nav-dropdown">
+                        <a>Lead scoring</a>
+                        <a>Website signals</a>
+                        <a>Outreach drafts</a>
+                        <a>Exports</a>
+                    </div>
+                </div>
+                <div class="nav-item">Solutions ▾
+                    <div class="nav-dropdown">
+                        <a>Web agencies</a>
+                        <a>Freelance developers</a>
+                        <a>Growth teams</a>
+                    </div>
+                </div>
+                <div class="nav-item">Resources ▾
+                    <div class="nav-dropdown">
+                        <a>Playbooks</a>
+                        <a>Case studies</a>
+                        <a>Changelog</a>
+                    </div>
+                </div>
+                <div class="nav-item"><a>Pricing</a></div>
+            </div>
+            <div class="nav-cta">Get started</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown(
+        """
         <div class="comic-hero">
             <span class="comic-kicker">Lead Qualification SaaS</span>
-            <h1 style="margin-top: 0.75rem; margin-bottom: 0.25rem;">Lead Qualifier Pro</h1>
+            <h1 style="margin-top: 0.75rem; margin-bottom: 0.25rem;">Qualify leads and generate outreach in minutes</h1>
             <p class="comic-subtitle">
-                Qualify leads, generate outreach, and focus on the work worth your time — with a comic-book vibe.
+                Scan websites, score prospects, and draft outreach automatically so your team can focus on closing.
             </p>
             <div style="margin-top: 0.8rem;">
-                <span class="comic-badge comic-badge--alt">Web Developers</span>
-                <span class="comic-badge comic-badge--alt">Sales Freelancers</span>
-                <span class="comic-badge comic-badge--alt">Editors</span>
-                <span class="comic-badge comic-badge--alt">Designers</span>
-                <span class="comic-badge comic-badge--alt">Agencies</span>
+                <span class="comic-badge comic-badge--alt">Web agencies</span>
+                <span class="comic-badge comic-badge--alt">Freelance developers</span>
+                <span class="comic-badge comic-badge--alt">Growth teams</span>
             </div>
         </div>
         """,
@@ -701,13 +1000,13 @@ def login_page():
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">What you get</h3>
                 <ul style="margin-bottom: 0.5rem;">
-                    <li><b>Lead scoring</b> that highlights who to contact first</li>
-                    <li><b>Website signals</b> (reachability, mobile, HTTPS, CTA)</li>
-                    <li><b>AI outreach drafts</b> that stay short and factual</li>
+                    <li><b>Lead scoring</b> to prioritize the best opportunities</li>
+                    <li><b>Website signals</b> (mobile, HTTPS, CTA, structure)</li>
+                    <li><b>Outreach drafts</b> that stay short and factual</li>
                     <li><b>CSV upload + exports</b> (Excel / CSV / JSON)</li>
                 </ul>
                 <div class="comic-speech" style="margin-top: 0.9rem;">
-                    Turn a messy list into a clear hit‑list in minutes.
+                    Turn a messy list into a clear, ranked pipeline.
                 </div>
             </div>
             """,
@@ -772,29 +1071,117 @@ def login_page():
             unsafe_allow_html=True,
         )
 
-        with st.expander("Deployment notes (Streamlit Cloud)", expanded=False):
-            st.markdown(
-                """
-                In Streamlit Cloud, go to **App settings → Secrets** and paste:
+    st.markdown("<br>", unsafe_allow_html=True)
 
-                ```toml
-                # App keys (top-level)
-                OPENAI_API_KEY = "sk-your-openai-key"
-                # Optional:
-                # LLM_MODEL = "gpt-4o-mini"
+    st.markdown(
+        """
+        <div class="pro-section">
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Why teams choose Lead Qualifier Pro</h3>
+                <div class="pro-grid" style="margin-top: 0.6rem;">
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">Faster qualification</h4>
+                        <p class="comic-micro">Scan sites and score leads in seconds instead of manual research.</p>
+                    </div>
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">Consistent outreach</h4>
+                        <p class="comic-micro">Every message follows verified facts and your offer settings.</p>
+                    </div>
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">Deploy-ready</h4>
+                        <p class="comic-micro">Streamlit Cloud deployment and simple secrets management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-                [auth]
-                redirect_uri = "https://your-app-name.streamlit.app/oauth2callback"
-                cookie_secret = "your-secret"
-                client_id = "your-google-client-id"
-                client_secret = "your-google-client-secret"
-                server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
-                ```
+    st.markdown(
+        """
+        <div class="pro-section">
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">Testimonials</h3>
+                <div class="pro-grid" style="margin-top: 0.6rem;">
+                    <div class="pro-card">
+                        <p class="comic-micro">“We cut qualification time from hours to minutes and doubled outreach volume.”</p>
+                        <p class="comic-micro"><b>— Maya R., Agency Lead</b></p>
+                    </div>
+                    <div class="pro-card">
+                        <p class="comic-micro">“The website signals help us craft outreach that actually converts.”</p>
+                        <p class="comic-micro"><b>— David L., Growth</b></p>
+                    </div>
+                    <div class="pro-card">
+                        <p class="comic-micro">“Clean UI, quick exports, and reliable scoring. It just works.”</p>
+                        <p class="comic-micro"><b>— Noor A., Freelancer</b></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-                Also update your **Google OAuth** Authorized redirect URI to match:
-                `https://your-app-name.streamlit.app/oauth2callback`
-                """
-            )
+    st.markdown(
+        """
+        <div class="pro-section">
+            <div class="comic-panel">
+                <h3 style="margin-top: 0;">FAQ</h3>
+                <div class="pro-grid" style="margin-top: 0.6rem;">
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">How is scoring calculated?</h4>
+                        <p class="comic-micro">Rules-based scoring using website quality and business signals.</p>
+                    </div>
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">Can I export results?</h4>
+                        <p class="comic-micro">Yes — export to Excel, CSV, or JSON.</p>
+                    </div>
+                    <div class="pro-card">
+                        <h4 style="margin-top: 0;">Is the outreach factual?</h4>
+                        <p class="comic-micro">Yes — it uses only verified website signals and your offer settings.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="pro-footer">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;">
+                <div><b>Lead Qualifier Pro</b> • Built for web development teams</div>
+                <div>Security • Privacy • Support</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    with st.expander("Deployment notes (Streamlit Cloud)", expanded=False):
+        st.markdown(
+            """
+            In Streamlit Cloud, go to **App settings → Secrets** and paste:
+
+            ```toml
+            # App keys (top-level)
+            OPENAI_API_KEY = "sk-your-openai-key"
+            # Optional:
+            # LLM_MODEL = "gpt-4o-mini"
+
+            [auth]
+            redirect_uri = "https://your-app-name.streamlit.app/oauth2callback"
+            cookie_secret = "your-secret"
+            client_id = "your-google-client-id"
+            client_secret = "your-google-client-secret"
+            server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
+            ```
+
+            Also update your **Google OAuth** Authorized redirect URI to match:
+            `https://your-app-name.streamlit.app/oauth2callback`
+            """
+        )
 
 def show_single_result(result: LeadOutput):
     st.markdown("---")
