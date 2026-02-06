@@ -611,7 +611,9 @@ div[data-testid="stCodeBlock"] pre * { color: var(--text) !important; }
     padding: 0.4rem 0.5rem;
     color: var(--text);
 }
-.nav-item:hover .nav-dropdown { display: block; }
+.nav-item:hover .nav-dropdown,
+.nav-dropdown:hover { display: block; }
+.nav-dropdown, .nav-dropdown * { pointer-events: auto; }
 .nav-cta {
     padding: 0.5rem 0.9rem;
     background: var(--primary);
@@ -938,33 +940,33 @@ def login_page():
     st.markdown(
         """
         <div class="pro-nav">
-            <div class="brand">Lead Qualifier Pro</div>
+            <div class="brand"><a href="#top">Lead Qualifier Pro</a></div>
             <div class="nav-links">
                 <div class="nav-item">Product ▾
                     <div class="nav-dropdown">
-                        <a>Lead scoring</a>
-                        <a>Website signals</a>
-                        <a>Outreach drafts</a>
-                        <a>Exports</a>
+                        <a href="#features">Lead scoring</a>
+                        <a href="#features">Website signals</a>
+                        <a href="#features">Outreach drafts</a>
+                        <a href="#features">Exports</a>
                     </div>
                 </div>
                 <div class="nav-item">Solutions ▾
                     <div class="nav-dropdown">
-                        <a>Web agencies</a>
-                        <a>Freelance developers</a>
-                        <a>Growth teams</a>
+                        <a href="#solutions">Web agencies</a>
+                        <a href="#solutions">Freelance developers</a>
+                        <a href="#solutions">Growth teams</a>
                     </div>
                 </div>
                 <div class="nav-item">Resources ▾
                     <div class="nav-dropdown">
-                        <a>Playbooks</a>
-                        <a>Case studies</a>
-                        <a>Changelog</a>
+                        <a href="#testimonials">Case studies</a>
+                        <a href="#faq">FAQ</a>
+                        <a href="#footer">Support</a>
                     </div>
                 </div>
-                <div class="nav-item"><a>Pricing</a></div>
+                <div class="nav-item"><a href="#pricing">Pricing</a></div>
             </div>
-            <div class="nav-cta">Get started</div>
+            <a class="nav-cta" href="#signin">Get started</a>
         </div>
         """,
         unsafe_allow_html=True,
@@ -974,6 +976,7 @@ def login_page():
 
     st.markdown(
         """
+        <div id="top"></div>
         <div class="comic-hero">
             <span class="comic-kicker">Lead Qualification SaaS</span>
             <h1 style="margin-top: 0.75rem; margin-bottom: 0.25rem;">Qualify leads and generate outreach in minutes</h1>
@@ -1017,6 +1020,7 @@ def login_page():
 
         st.markdown(
             """
+            <div id="solutions"></div>
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">Built for web developers</h3>
                 <div style="margin-bottom: 0.3rem;">
@@ -1030,18 +1034,19 @@ def login_page():
             unsafe_allow_html=True,
         )
 
-    with col2:
-        st.markdown(
-            """
-            <div class="comic-panel">
-                <h3 style="margin-top: 0;">Sign in</h3>
-                <p class="comic-micro" style="margin-top: 0;">
-                    Use Google to keep your workspace private and your credits tied to your account.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with col2:
+            st.markdown(
+                """
+                <div id="signin"></div>
+                <div class="comic-panel">
+                    <h3 style="margin-top: 0;">Sign in</h3>
+                    <p class="comic-micro" style="margin-top: 0;">
+                        Use Google to keep your workspace private and your credits tied to your account.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         if st.button("Sign in with Google", type="primary", width="stretch"):
             try:
@@ -1053,6 +1058,7 @@ def login_page():
 
         st.markdown(
             """
+            <div id="pricing"></div>
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">Pricing (credits)</h3>
                 <p class="comic-micro" style="margin-top: 0; margin-bottom: 0.8rem;">
@@ -1075,6 +1081,7 @@ def login_page():
 
     st.markdown(
         """
+        <div id="features"></div>
         <div class="pro-section">
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">Why teams choose Lead Qualifier Pro</h3>
@@ -1100,6 +1107,7 @@ def login_page():
 
     st.markdown(
         """
+        <div id="testimonials"></div>
         <div class="pro-section">
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">Testimonials</h3>
@@ -1125,6 +1133,7 @@ def login_page():
 
     st.markdown(
         """
+        <div id="faq"></div>
         <div class="pro-section">
             <div class="comic-panel">
                 <h3 style="margin-top: 0;">FAQ</h3>
@@ -1150,6 +1159,7 @@ def login_page():
 
     st.markdown(
         """
+        <div id="footer"></div>
         <div class="pro-footer">
             <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;">
                 <div><b>Lead Qualifier Pro</b> • Built for web development teams</div>
